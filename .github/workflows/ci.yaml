@@ -8,7 +8,9 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     env:
-      CPM_SOURCE_CACHE: ~/cpm-cache
+      CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm-cache
+      LLVM_CACHE: ${{ github.workspace }}/llvm-cache
+      LLVM_VERSION: 16.0.0
       SCCACHE_GHA_ENABLED: true
     strategy:
       matrix:
@@ -21,10 +23,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Setup LLVM
-        uses: aminya/setup-cpp@v1
+      - name: Install libtinfo5
+        run: sudo apt-get install libtinfo5
+
+      - name: Cache LLVM
+        id: cache-llvm
+        uses: actions/cache@v3
         with:
-          llvm: 16
+          path: ${{ env.LLVM_CACHE }}
+          key: llvm-cache-${{ env.LLVM_VERSION }}
+
+      - name: Setup LLVM
+        uses: KyleMayes/install-llvm-action@v1
+        with:
+          version: ${{ env.LLVM_VERSION }}
+          directory: ${{ env.LLVM_CACHE }}
+          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
 
       - name: Setup CMake & Ninja
         uses: lukka/get-cmake@latest
@@ -51,11 +65,11 @@ jobs:
         run: ctest --preset ${{ matrix.preset }} --parallel ${{ matrix.cores }}
 
       - name: Package
-        if: endsWith(matrix.preset, '-release') && github.event_name == 'push'
-        run: cpack --preset ${{ matrix.preset }} --verbose -DCPACK_PACKAGE_DIRECTORY="${GITHUB_WORKSPACE}" -DCPACK_THREADS=0
+        if: endsWith(matrix.preset, '-release')
+        run: cpack --preset ${{ matrix.preset }} --verbose -B "${GITHUB_WORKSPACE}" -DCPACK_THREADS=0
 
       - name: Archive
-        if: endsWith(matrix.preset, '-release') && github.event_name == 'push'
+        if: endsWith(matrix.preset, '-release')
         uses: actions/upload-artifact@v3
         with:
           name: ${{ runner.os }}-${{ matrix.preset }}-${{ github.sha }}
