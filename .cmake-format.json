@@ -1,0 +1,34 @@
+{
+  "format": {
+    "line_width": 120,
+    "dangle_parens": true
+  },
+  "lint": {
+    "disabled_codes": [
+      "C0111"
+    ]
+  },
+  "parse": {
+    "additional_commands": {
+      "cpmdeclarepackage": {
+        "pargs": 1,
+        "spelling": "CPMDeclarePackage",
+        "kwargs": {
+          "GIT_TAG": 1,
+          "VERSION": 1,
+          "GITHUB_REPOSITORY": 1,
+          "SYSTEM": 1,
+          "EXCLUDE_FROM_ALL": 1
+        }
+      },
+      "cpmgetpackage": {
+        "pargs": 1,
+        "spelling": "CPMGetPackage"
+      },
+      "cpmusepackagelock": {
+        "pargs": 1,
+        "spelling": "CPMUsePackageLock"
+      }
+    }
+  }
+}
