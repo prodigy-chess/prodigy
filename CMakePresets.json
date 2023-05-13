@@ -1,0 +1,194 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "unixlike-common",
+      "hidden": true,
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "build/${presetName}",
+      "installDir": "build/${presetName}",
+      "condition": {
+        "type": "inList",
+        "string": "${hostSystemName}",
+        "list": [
+          "Darwin",
+          "Linux"
+        ]
+      },
+      "cacheVariables": {
+        "CMAKE_COLOR_DIAGNOSTICS": true,
+        "CMAKE_COMPILE_WARNING_AS_ERROR": true,
+        "CMAKE_CONFIGURATION_TYPES": "Debug;ASan;TSan;UBSan;Release",
+        "CMAKE_CXX_FLAGS_ASAN": "-O2 -g -fsanitize=address -fno-omit-frame-pointer",
+        "CMAKE_CXX_FLAGS_TSAN": "-O2 -g -fsanitize=thread -fno-omit-frame-pointer",
+        "CMAKE_CXX_FLAGS_UBSAN": "-O2 -g -fsanitize=undefined -fno-omit-frame-pointer",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE": true,
+        "CMAKE_LINK_WHAT_YOU_USE": true
+      }
+    },
+    {
+      "name": "unixlike-clang",
+      "inherits": "unixlike-common",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_CXX_FLAGS":
+            "-Wall -Wextra -Wpedantic -Wimplicit-fallthrough -Wold-style-cast -Wunreachable-code-aggressive"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "unixlike-clang",
+      "hidden": true,
+      "configurePreset": "unixlike-clang"
+    },
+    {
+      "name": "unixlike-clang-debug",
+      "inherits": "unixlike-clang",
+      "configuration": "Debug"
+    },
+    {
+      "name": "unixlike-clang-asan",
+      "inherits": "unixlike-clang",
+      "configuration": "ASan"
+    },
+    {
+      "name": "unixlike-clang-tsan",
+      "inherits": "unixlike-clang",
+      "configuration": "TSan"
+    },
+    {
+      "name": "unixlike-clang-ubsan",
+      "inherits": "unixlike-clang",
+      "configuration": "UBSan"
+    },
+    {
+      "name": "unixlike-clang-release",
+      "inherits": "unixlike-clang",
+      "configuration": "Release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "common",
+      "hidden": true,
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "unixlike-clang",
+      "hidden": true,
+      "inherits": "common",
+      "configurePreset": "unixlike-clang"
+    },
+    {
+      "name": "unixlike-clang-debug",
+      "inherits": "unixlike-clang",
+      "configuration": "Debug"
+    },
+    {
+      "name": "unixlike-clang-asan",
+      "inherits": "unixlike-clang",
+      "configuration": "ASan"
+    },
+    {
+      "name": "unixlike-clang-tsan",
+      "inherits": "unixlike-clang",
+      "configuration": "TSan"
+    },
+    {
+      "name": "unixlike-clang-ubsan",
+      "inherits": "unixlike-clang",
+      "configuration": "UBSan"
+    },
+    {
+      "name": "unixlike-clang-release",
+      "inherits": "unixlike-clang",
+      "configuration": "Release"
+    }
+  ],
+  "packagePresets": [
+    {
+      "name": "release",
+      "hidden": true,
+      "generators": [
+        "TZST"
+      ],
+      "configurations": [
+        "Release"
+      ]
+    },
+    {
+      "name": "unixlike-clang-release",
+      "inherits": "release",
+      "configurePreset": "unixlike-clang"
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "build-debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "unixlike-clang"
+        },
+        {
+          "type": "build",
+          "name": "unixlike-clang-debug"
+        }
+      ]
+    },
+    {
+      "name": "test-debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "unixlike-clang"
+        },
+        {
+          "type": "build",
+          "name": "unixlike-clang-debug"
+        },
+        {
+          "type": "test",
+          "name": "unixlike-clang-debug"
+        }
+      ]
+    },
+    {
+      "name": "build-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "unixlike-clang"
+        },
+        {
+          "type": "build",
+          "name": "unixlike-clang-release"
+        }
+      ]
+    },
+    {
+      "name": "test-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "unixlike-clang"
+        },
+        {
+          "type": "build",
+          "name": "unixlike-clang-release"
+        },
+        {
+          "type": "test",
+          "name": "unixlike-clang-release"
+        }
+      ]
+    }
+  ]
+}

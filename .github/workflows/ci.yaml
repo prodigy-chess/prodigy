@@ -1,0 +1,63 @@
+name: CI
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    env:
+      CPM_SOURCE_CACHE: ~/cpm-cache
+      SCCACHE_GHA_ENABLED: true
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        preset: [unixlike-clang-debug, unixlike-clang-asan, unixlike-clang-tsan, unixlike-clang-ubsan, unixlike-clang-release]
+        include:
+          - os: ubuntu-22.04
+            cores: 2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup LLVM
+        uses: aminya/setup-cpp@v1
+        with:
+          llvm: 16
+
+      - name: Setup CMake & Ninja
+        uses: lukka/get-cmake@latest
+
+      - name: Setup Mold
+        uses: rui314/setup-mold@v1
+
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.3
+
+      - name: Cache CPM
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.CPM_SOURCE_CACHE }}
+          key: cpm-cache-${{ hashFiles('**/cpm-package-lock.cmake') }}
+
+      - name: Configure
+        run: cmake --preset unixlike-clang -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=OFF
+
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }} --verbose
+
+      - name: Test
+        run: ctest --preset ${{ matrix.preset }} --parallel ${{ matrix.cores }}
+
+      - name: Package
+        if: endsWith(matrix.preset, '-release') && github.event_name == 'push'
+        run: cpack --preset ${{ matrix.preset }} --verbose -DCPACK_PACKAGE_DIRECTORY="${GITHUB_WORKSPACE}" -DCPACK_THREADS=0
+
+      - name: Archive
+        if: endsWith(matrix.preset, '-release') && github.event_name == 'push'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ runner.os }}-${{ matrix.preset }}-${{ github.sha }}
+          path: '*.tar.zst'
+          if-no-files-found: error

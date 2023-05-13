@@ -1,0 +1,7 @@
+CI:
+- LTO
+- macOS
+
+Tooling:
+- clang-tidy
+- coverage
