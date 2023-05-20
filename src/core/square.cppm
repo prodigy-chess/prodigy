@@ -4,9 +4,9 @@ module;
 #include <magic_enum.hpp>
 #include <utility>
 
-export module prodigy.chess:square;
+export module prodigy.core:square;
 
-export namespace prodigy::chess {
+export namespace prodigy {
 // clang-format off
 enum class Square : std::uint8_t {
   A1, B1, C1, D1, E1, F1, G1, H1,
@@ -35,13 +35,13 @@ constexpr File file_of(const Square square) noexcept {
 constexpr Rank rank_of(const Square square) noexcept {
   return static_cast<Rank>(std::to_underlying(square) / magic_enum::enum_count<File>());
 }
-}  // namespace prodigy::chess
+}  // namespace prodigy
 
 namespace magic_enum::customize {
 template <>
-constexpr customize_t enum_name<prodigy::chess::Rank>(const prodigy::chess::Rank rank) noexcept {
+constexpr customize_t enum_name<prodigy::Rank>(const prodigy::Rank rank) noexcept {
   switch (rank) {
-    using enum prodigy::chess::Rank;
+    using enum prodigy::Rank;
     case ONE:
       return "1";
     case TWO:

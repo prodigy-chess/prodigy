@@ -1,10 +1,11 @@
 #include <catch2/catch_test_macros.hpp>
 #include <magic_enum.hpp>
 #include <string>
+#include <utility>
 
-import prodigy.chess;
+import prodigy.core;
 
-namespace prodigy::chess {
+namespace prodigy {
 namespace {
 using namespace magic_enum;
 
@@ -28,5 +29,11 @@ TEST_CASE("rank_of") {
     STATIC_REQUIRE(rank_of(square) == enum_cast<Rank>(enum_name<square.value>().substr(1)));
   });
 }
+
+TEST_CASE("enum_name") {
+  enum_for_each<Rank>([](const auto rank) {
+    STATIC_REQUIRE(enum_name<rank.value>() == std::string{'1' + std::to_underlying(rank.value)});
+  });
+}
 }  // namespace
-}  // namespace prodigy::chess
+}  // namespace prodigy
