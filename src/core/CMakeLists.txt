@@ -5,11 +5,15 @@ target_sources(
           CXX_MODULES
           FILES
           bitboard.cppm
+          board.cppm
           castling_rights.cppm
           color.cppm
+          containers.cppm
           core.cppm
+          fen.cppm
           piece_type.cppm
           ply.cppm
+          position.cppm
           square.cppm
 )
 target_link_libraries(core PRIVATE magic_enum)
