@@ -5,5 +5,5 @@ module;
 export module prodigy.core:ply;
 
 export namespace prodigy {
-enum class Ply : std::uint8_t {};
+enum class Ply : std::uint16_t {};
 }

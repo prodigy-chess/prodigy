@@ -1,7 +1,11 @@
 CI:
 - LTO
 - macOS
+- Why's -stdlib=libc++ needed for std::expected? https://github.com/llvm/llvm-project/issues/62801
 
 Tooling:
 - clang-tidy
 - coverage
+
+C++:
+- consider consteval if possible

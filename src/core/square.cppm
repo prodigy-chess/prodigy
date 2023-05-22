@@ -4,6 +4,8 @@ module;
 #include <magic_enum.hpp>
 #include <utility>
 
+#include "macros.h"
+
 export module prodigy.core:square;
 
 export namespace prodigy {
@@ -35,6 +37,10 @@ constexpr File file_of(const Square square) noexcept {
 constexpr Rank rank_of(const Square square) noexcept {
   return static_cast<Rank>(std::to_underlying(square) / magic_enum::enum_count<File>());
 }
+
+PRODIGY_ENUM_IOSTREAM_OPERATORS(Square)
+PRODIGY_ENUM_IOSTREAM_OPERATORS(File)
+PRODIGY_ENUM_IOSTREAM_OPERATORS(Rank)
 }  // namespace prodigy
 
 namespace magic_enum::customize {

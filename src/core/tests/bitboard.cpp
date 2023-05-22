@@ -13,5 +13,10 @@ TEST_CASE("to_bitboard") {
     STATIC_REQUIRE(to_bitboard(square) == Bitboard{1ULL << std::to_underlying(square.value)});
   });
 }
+
+TEST_CASE("empty") {
+  STATIC_REQUIRE(empty(Bitboard()));
+  enum_for_each<Square>([](const auto square) { STATIC_REQUIRE_FALSE(empty(to_bitboard(square))); });
+}
 }  // namespace
 }  // namespace prodigy
