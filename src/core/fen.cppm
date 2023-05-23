@@ -23,7 +23,7 @@ import :square;
 export namespace prodigy {
 inline constexpr auto STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-constexpr std::expected<Position, std::string_view> to_position(const std::string_view fen) noexcept {
+constexpr std::expected<Position, std::string_view> parse_fen(const std::string_view fen) noexcept {
   Position position{};
   auto field_index = 0UZ;
   for (const auto field : fen | std::views::split(' ') | std::views::transform([](auto&& range) {
