@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.26.3 FATAL_ERROR)
 project(
   prodigy
   VERSION 0
+  DESCRIPTION "UCI chess engine"
+  HOMEPAGE_URL https://github.com/prodigy-chess/prodigy
   LANGUAGES CXX
 )
 

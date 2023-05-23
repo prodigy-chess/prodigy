@@ -8,8 +8,8 @@ import prodigy.core;
 
 namespace prodigy {
 namespace {
-TEST_CASE("to_position") {
-  STATIC_REQUIRE(to_position("8/8/8/8/8/8/8/8 w - - 0 0").value() == Position{});
+TEST_CASE("valid FEN") {
+  STATIC_REQUIRE(parse_fen("8/8/8/8/8/8/8/8 w - - 0 0").value() == Position{});
   const auto [fen, position] = GENERATE(table<std::string_view, Position>({
       {
           "8/8/8/8/8/8/8/8 b Kq e3 100 5000",
@@ -112,7 +112,7 @@ TEST_CASE("to_position") {
       },
   }));
   INFO(fen);
-  REQUIRE(to_position(fen).value() == position);
+  REQUIRE(parse_fen(fen).value() == position);
 }
 
 TEST_CASE("invalid FEN") {
@@ -173,10 +173,10 @@ TEST_CASE("invalid FEN") {
       {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 \n", "Too many fields."},
       {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 0", "Too many fields."},
   }));
-  const auto position = to_position(fen);
   INFO(fen);
-  REQUIRE_FALSE(position.has_value());
-  REQUIRE(position.error() == error);
+  const auto result = parse_fen(fen);
+  REQUIRE_FALSE(result.has_value());
+  REQUIRE(result.error() == error);
 }
 }  // namespace
 }  // namespace prodigy
