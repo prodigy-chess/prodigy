@@ -16,7 +16,7 @@ CPMDeclarePackage(
 
 CPMDeclarePackage(
   magic_enum
-  GIT_TAG 629f7b0
+  GIT_TAG 8f6c9905fdf901c27093f01b16b8a756073b1ea6
   GITHUB_REPOSITORY Neargye/magic_enum
   SYSTEM YES
   EXCLUDE_FROM_ALL YES
