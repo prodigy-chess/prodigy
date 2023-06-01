@@ -10,6 +10,48 @@ namespace prodigy {
 namespace {
 TEST_CASE("valid FEN") {
   STATIC_REQUIRE(parse_fen("8/8/8/8/8/8/8/8 w - - 0 0").value() == Position{});
+  STATIC_REQUIRE(parse_fen(STARTING_FEN).value() ==
+                 Position{
+                     .board{[] {
+                       EnumMap<Square, std::optional<std::pair<Color, PieceType>>> piece_placement{};
+                       piece_placement[Square::A1].emplace(Color::WHITE, PieceType::ROOK);
+                       piece_placement[Square::B1].emplace(Color::WHITE, PieceType::KNIGHT);
+                       piece_placement[Square::C1].emplace(Color::WHITE, PieceType::BISHOP);
+                       piece_placement[Square::D1].emplace(Color::WHITE, PieceType::QUEEN);
+                       piece_placement[Square::E1].emplace(Color::WHITE, PieceType::KING);
+                       piece_placement[Square::F1].emplace(Color::WHITE, PieceType::BISHOP);
+                       piece_placement[Square::G1].emplace(Color::WHITE, PieceType::KNIGHT);
+                       piece_placement[Square::H1].emplace(Color::WHITE, PieceType::ROOK);
+                       piece_placement[Square::A2].emplace(Color::WHITE, PieceType::PAWN);
+                       piece_placement[Square::B2].emplace(Color::WHITE, PieceType::PAWN);
+                       piece_placement[Square::C2].emplace(Color::WHITE, PieceType::PAWN);
+                       piece_placement[Square::D2].emplace(Color::WHITE, PieceType::PAWN);
+                       piece_placement[Square::E2].emplace(Color::WHITE, PieceType::PAWN);
+                       piece_placement[Square::F2].emplace(Color::WHITE, PieceType::PAWN);
+                       piece_placement[Square::G2].emplace(Color::WHITE, PieceType::PAWN);
+                       piece_placement[Square::H2].emplace(Color::WHITE, PieceType::PAWN);
+                       piece_placement[Square::A7].emplace(Color::BLACK, PieceType::PAWN);
+                       piece_placement[Square::B7].emplace(Color::BLACK, PieceType::PAWN);
+                       piece_placement[Square::C7].emplace(Color::BLACK, PieceType::PAWN);
+                       piece_placement[Square::D7].emplace(Color::BLACK, PieceType::PAWN);
+                       piece_placement[Square::E7].emplace(Color::BLACK, PieceType::PAWN);
+                       piece_placement[Square::F7].emplace(Color::BLACK, PieceType::PAWN);
+                       piece_placement[Square::G7].emplace(Color::BLACK, PieceType::PAWN);
+                       piece_placement[Square::H7].emplace(Color::BLACK, PieceType::PAWN);
+                       piece_placement[Square::A8].emplace(Color::BLACK, PieceType::ROOK);
+                       piece_placement[Square::B8].emplace(Color::BLACK, PieceType::KNIGHT);
+                       piece_placement[Square::C8].emplace(Color::BLACK, PieceType::BISHOP);
+                       piece_placement[Square::D8].emplace(Color::BLACK, PieceType::QUEEN);
+                       piece_placement[Square::E8].emplace(Color::BLACK, PieceType::KING);
+                       piece_placement[Square::F8].emplace(Color::BLACK, PieceType::BISHOP);
+                       piece_placement[Square::G8].emplace(Color::BLACK, PieceType::KNIGHT);
+                       piece_placement[Square::H8].emplace(Color::BLACK, PieceType::ROOK);
+                       return piece_placement;
+                     }()},
+                     .castling_rights = CastlingRights::WHITE_KINGSIDE | CastlingRights::WHITE_QUEENSIDE |
+                                        CastlingRights::BLACK_KINGSIDE | CastlingRights::BLACK_QUEENSIDE,
+                     .fullmove_number = 1,
+                 });
   const auto [fen, position] = GENERATE(table<std::string_view, Position>({
       {
           "8/8/8/8/8/8/8/8 b Kq e3 100 5000",
@@ -19,50 +61,6 @@ TEST_CASE("valid FEN") {
               .en_passant_target = File::E,
               .halfmove_clock = Ply{100},
               .fullmove_number = 5000,
-          },
-      },
-      {
-          STARTING_FEN,
-          {
-              .board{[] {
-                EnumMap<Square, std::optional<std::pair<Color, PieceType>>> piece_placement{};
-                piece_placement[Square::A1].emplace(Color::WHITE, PieceType::ROOK);
-                piece_placement[Square::B1].emplace(Color::WHITE, PieceType::KNIGHT);
-                piece_placement[Square::C1].emplace(Color::WHITE, PieceType::BISHOP);
-                piece_placement[Square::D1].emplace(Color::WHITE, PieceType::QUEEN);
-                piece_placement[Square::E1].emplace(Color::WHITE, PieceType::KING);
-                piece_placement[Square::F1].emplace(Color::WHITE, PieceType::BISHOP);
-                piece_placement[Square::G1].emplace(Color::WHITE, PieceType::KNIGHT);
-                piece_placement[Square::H1].emplace(Color::WHITE, PieceType::ROOK);
-                piece_placement[Square::A2].emplace(Color::WHITE, PieceType::PAWN);
-                piece_placement[Square::B2].emplace(Color::WHITE, PieceType::PAWN);
-                piece_placement[Square::C2].emplace(Color::WHITE, PieceType::PAWN);
-                piece_placement[Square::D2].emplace(Color::WHITE, PieceType::PAWN);
-                piece_placement[Square::E2].emplace(Color::WHITE, PieceType::PAWN);
-                piece_placement[Square::F2].emplace(Color::WHITE, PieceType::PAWN);
-                piece_placement[Square::G2].emplace(Color::WHITE, PieceType::PAWN);
-                piece_placement[Square::H2].emplace(Color::WHITE, PieceType::PAWN);
-                piece_placement[Square::A7].emplace(Color::BLACK, PieceType::PAWN);
-                piece_placement[Square::B7].emplace(Color::BLACK, PieceType::PAWN);
-                piece_placement[Square::C7].emplace(Color::BLACK, PieceType::PAWN);
-                piece_placement[Square::D7].emplace(Color::BLACK, PieceType::PAWN);
-                piece_placement[Square::E7].emplace(Color::BLACK, PieceType::PAWN);
-                piece_placement[Square::F7].emplace(Color::BLACK, PieceType::PAWN);
-                piece_placement[Square::G7].emplace(Color::BLACK, PieceType::PAWN);
-                piece_placement[Square::H7].emplace(Color::BLACK, PieceType::PAWN);
-                piece_placement[Square::A8].emplace(Color::BLACK, PieceType::ROOK);
-                piece_placement[Square::B8].emplace(Color::BLACK, PieceType::KNIGHT);
-                piece_placement[Square::C8].emplace(Color::BLACK, PieceType::BISHOP);
-                piece_placement[Square::D8].emplace(Color::BLACK, PieceType::QUEEN);
-                piece_placement[Square::E8].emplace(Color::BLACK, PieceType::KING);
-                piece_placement[Square::F8].emplace(Color::BLACK, PieceType::BISHOP);
-                piece_placement[Square::G8].emplace(Color::BLACK, PieceType::KNIGHT);
-                piece_placement[Square::H8].emplace(Color::BLACK, PieceType::ROOK);
-                return piece_placement;
-              }()},
-              .castling_rights = CastlingRights::WHITE_KINGSIDE | CastlingRights::WHITE_QUEENSIDE |
-                                 CastlingRights::BLACK_KINGSIDE | CastlingRights::BLACK_QUEENSIDE,
-              .fullmove_number = 1,
           },
       },
       {

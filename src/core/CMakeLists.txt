@@ -10,6 +10,7 @@ target_sources(
           color.cppm
           containers.cppm
           core.cppm
+          direction.cppm
           fen.cppm
           piece_type.cppm
           ply.cppm

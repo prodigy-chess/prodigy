@@ -58,7 +58,7 @@ TEST_CASE("starting board") {
   static constexpr auto piece_to_bitboard = [&] {
     EnumMap<Color, EnumMap<PieceType, Bitboard>> piece_to_bitboard{};
     enum_for_each<Square>([&](const auto square) {
-      if (const auto piece = piece_placement[square.value]; piece.has_value()) {
+      if (const auto piece = piece_placement[square]; piece.has_value()) {
         piece_to_bitboard[piece->first][piece->second] |= to_bitboard(square);
       }
     });

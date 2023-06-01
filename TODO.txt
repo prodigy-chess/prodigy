@@ -9,3 +9,6 @@ Tooling:
 
 C++:
 - consider consteval if possible
+
+Chess:
+- FEN: validate en passant target square (maybe add an EnPassantTarget enum?)
