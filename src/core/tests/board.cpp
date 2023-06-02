@@ -12,8 +12,8 @@ using namespace magic_enum;
 TEST_CASE("empty") {
   static constexpr Board board;
   enum_for_each<Color>([](const auto color) {
-    enum_for_each<PieceType>([&](const auto piece_type) { STATIC_REQUIRE(empty(board.get(color, piece_type))); });
-    STATIC_REQUIRE(empty(board.all_pieces(color)));
+    enum_for_each<PieceType>([&](const auto piece_type) { STATIC_REQUIRE(empty(board[color, piece_type])); });
+    STATIC_REQUIRE(empty(board[color]));
   });
   STATIC_REQUIRE(empty(board.occupancy()));
 }
@@ -67,17 +67,17 @@ TEST_CASE("starting board") {
   static constexpr Board board(piece_placement);
   enum_for_each<Color>([](const auto color) {
     enum_for_each<PieceType>([&](const auto piece_type) {
-      STATIC_REQUIRE(board.get(color, piece_type) == piece_to_bitboard[color][piece_type]);
+      STATIC_REQUIRE(board[color, piece_type] == piece_to_bitboard[color][piece_type]);
     });
-    STATIC_REQUIRE(board.all_pieces(color) == [&] {
+    STATIC_REQUIRE(board[color] == [&] {
       Bitboard all_pieces{};
-      enum_for_each<PieceType>([&](const auto piece_type) { all_pieces |= board.get(color, piece_type); });
+      enum_for_each<PieceType>([&](const auto piece_type) { all_pieces |= board[color, piece_type]; });
       return all_pieces;
     }());
   });
   STATIC_REQUIRE(board.occupancy() == [] {
     Bitboard occupancy{};
-    enum_for_each<Color>([&](const auto color) { occupancy |= board.all_pieces(color); });
+    enum_for_each<Color>([&](const auto color) { occupancy |= board[color]; });
     return occupancy;
   }());
 }
