@@ -26,11 +26,11 @@ class Board {
     });
   }
 
-  constexpr Bitboard get(const Color color, const PieceType piece_type) const noexcept {
+  constexpr Bitboard operator[](const Color color, const PieceType piece_type) const noexcept {
     return pieces_[color][piece_type];
   }
 
-  constexpr Bitboard all_pieces(const Color color) const noexcept { return colors_[color]; }
+  constexpr Bitboard operator[](const Color color) const noexcept { return colors_[color]; }
 
   constexpr Bitboard occupancy() const noexcept { return occupancy_; }
 
