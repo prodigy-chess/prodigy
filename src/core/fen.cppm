@@ -34,7 +34,7 @@ constexpr std::expected<Position, std::string_view> parse_fen(const std::string_
     };
     switch (field_index++) {
       case 0: {
-        EnumMap<Square, std::optional<std::pair<Color, PieceType>>> piece_placement{};
+        EnumMap<Square, std::optional<std::pair<Color, PieceType>>> piece_placement;
         auto rank_index = magic_enum::enum_count<Rank>() - 1UZ;
         for (const auto rank_contents : field | std::views::split('/')) {
           if (rank_index >= magic_enum::enum_count<Rank>()) {
