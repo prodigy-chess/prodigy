@@ -13,7 +13,7 @@ TEST_CASE("valid FEN") {
   STATIC_REQUIRE(parse_fen(STARTING_FEN).value() ==
                  Position{
                      .board{[] {
-                       EnumMap<Square, std::optional<std::pair<Color, PieceType>>> piece_placement{};
+                       EnumMap<Square, std::optional<std::pair<Color, PieceType>>> piece_placement;
                        piece_placement[Square::A1].emplace(Color::WHITE, PieceType::ROOK);
                        piece_placement[Square::B1].emplace(Color::WHITE, PieceType::KNIGHT);
                        piece_placement[Square::C1].emplace(Color::WHITE, PieceType::BISHOP);
@@ -67,7 +67,7 @@ TEST_CASE("valid FEN") {
           "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 3 12",
           {
               .board{[] {
-                EnumMap<Square, std::optional<std::pair<Color, PieceType>>> piece_placement{};
+                EnumMap<Square, std::optional<std::pair<Color, PieceType>>> piece_placement;
                 piece_placement[Square::A8].emplace(Color::BLACK, PieceType::ROOK);
                 piece_placement[Square::E8].emplace(Color::BLACK, PieceType::KING);
                 piece_placement[Square::H8].emplace(Color::BLACK, PieceType::ROOK);
