@@ -58,7 +58,7 @@ TEST_CASE("valid FEN") {
           {
               .side_to_move = Color::BLACK,
               .castling_rights = CastlingRights::WHITE_KINGSIDE | CastlingRights::BLACK_QUEENSIDE,
-              .en_passant_target = File::E,
+              .en_passant_target = Square::E3,
               .halfmove_clock = Ply{100},
               .fullmove_number = 5000,
           },
@@ -147,6 +147,8 @@ TEST_CASE("invalid FEN") {
       {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkqp - 0 1", "Invalid castling availability."},
       {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w  - 0 1", "Invalid castling availability."},
 
+      {"rnbqkbnr/ppp1p1pp/8/3pPp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f9 0 3", "Invalid en passant target square."},
+      {"rnbqkbnr/ppp1p1pp/8/3pPp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f3 0 3", "Invalid en passant target square."},
       {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq a 0 1", "Invalid en passant target square."},
       {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq A 0 1", "Invalid en passant target square."},
       {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq 3 0 1", "Invalid en passant target square."},
