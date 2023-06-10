@@ -81,5 +81,244 @@ TEST_CASE("starting board") {
     return occupancy;
   }());
 }
+
+TEST_CASE("quiet move") {
+  static constexpr auto before =
+      parse_fen("rnbqkbnr/1pp2ppp/3p4/p3p3/4P2P/5P2/PPPP2P1/RNBQKBNR w KQkq - 0 4").value().board;
+  {
+    static constexpr auto move = [](auto board) {
+      board.apply_quiet_move(Color::WHITE, PieceType::PAWN, to_bitboard(Square::G2), to_bitboard(Square::G3));
+      return board;
+    };
+    static constexpr auto pawn_single_push = move(before);
+    STATIC_REQUIRE(pawn_single_push ==
+                   parse_fen("rnbqkbnr/1pp2ppp/3p4/p3p3/4P2P/5PP1/PPPP4/RNBQKBNR b KQkq - 0 4").value().board);
+    STATIC_REQUIRE(move(pawn_single_push) == before);
+  }
+  {
+    static constexpr auto move = [](auto board) {
+      board.apply_quiet_move(Color::WHITE, PieceType::PAWN, to_bitboard(Square::G2), to_bitboard(Square::G4));
+      return board;
+    };
+    static constexpr auto pawn_double_push = move(before);
+    STATIC_REQUIRE(pawn_double_push ==
+                   parse_fen("rnbqkbnr/1pp2ppp/3p4/p3p3/4P1PP/5P2/PPPP4/RNBQKBNR b KQkq - 0 4").value().board);
+    STATIC_REQUIRE(move(pawn_double_push) == before);
+  }
+  {
+    static constexpr auto move = [](auto board) {
+      board.apply_quiet_move(Color::WHITE, PieceType::KNIGHT, to_bitboard(Square::G1), to_bitboard(Square::E2));
+      return board;
+    };
+    static constexpr auto knight_move = move(before);
+    STATIC_REQUIRE(knight_move ==
+                   parse_fen("rnbqkbnr/1pp2ppp/3p4/p3p3/4P2P/5P2/PPPPN1P1/RNBQKB1R b KQkq - 1 4").value().board);
+    STATIC_REQUIRE(move(knight_move) == before);
+  }
+  {
+    static constexpr auto move = [](auto board) {
+      board.apply_quiet_move(Color::WHITE, PieceType::BISHOP, to_bitboard(Square::F1), to_bitboard(Square::B5));
+      return board;
+    };
+    static constexpr auto bishop_move = move(before);
+    STATIC_REQUIRE(bishop_move ==
+                   parse_fen("rnbqkbnr/1pp2ppp/3p4/pB2p3/4P2P/5P2/PPPP2P1/RNBQK1NR b KQkq - 1 4").value().board);
+    STATIC_REQUIRE(move(bishop_move) == before);
+  }
+  {
+    static constexpr auto move = [](auto board) {
+      board.apply_quiet_move(Color::WHITE, PieceType::ROOK, to_bitboard(Square::H1), to_bitboard(Square::H3));
+      return board;
+    };
+    static constexpr auto rook_move = move(before);
+    STATIC_REQUIRE(rook_move ==
+                   parse_fen("rnbqkbnr/1pp2ppp/3p4/p3p3/4P2P/5P1R/PPPP2P1/RNBQKBN1 b Qkq - 1 4").value().board);
+    STATIC_REQUIRE(move(rook_move) == before);
+  }
+  {
+    static constexpr auto move = [](auto board) {
+      board.apply_quiet_move(Color::WHITE, PieceType::QUEEN, to_bitboard(Square::D1), to_bitboard(Square::E2));
+      return board;
+    };
+    static constexpr auto queen_move = move(before);
+    STATIC_REQUIRE(queen_move ==
+                   parse_fen("rnbqkbnr/1pp2ppp/3p4/p3p3/4P2P/5P2/PPPPQ1P1/RNB1KBNR b KQkq - 1 4").value().board);
+    STATIC_REQUIRE(move(queen_move) == before);
+  }
+  {
+    static constexpr auto move = [](auto board) {
+      board.apply_quiet_move(Color::WHITE, PieceType::KING, to_bitboard(Square::E1), to_bitboard(Square::F2));
+      return board;
+    };
+    static constexpr auto king_move = move(before);
+    STATIC_REQUIRE(king_move ==
+                   parse_fen("rnbqkbnr/1pp2ppp/3p4/p3p3/4P2P/5P2/PPPP1KP1/RNBQ1BNR b kq - 1 4").value().board);
+    STATIC_REQUIRE(move(king_move) == before);
+  }
+}
+
+TEST_CASE("capture") {
+  static constexpr auto before =
+      parse_fen("r3kb1r/nppb2p1/3p4/1B1np1qp/p1K1p2P/P1P2P1N/RP1P2P1/1NBQR3 w kq - 0 14").value().board;
+  {
+    static constexpr auto move = [](auto board) {
+      board.apply_capture(Color::WHITE, PieceType::PAWN, to_bitboard(Square::F3), to_bitboard(Square::E4),
+                          PieceType::PAWN);
+      return board;
+    };
+    static constexpr auto pawn_capture = move(before);
+    STATIC_REQUIRE(pawn_capture ==
+                   parse_fen("r3kb1r/nppb2p1/3p4/1B1np1qp/p1K1P2P/P1P4N/RP1P2P1/1NBQR3 b kq - 0 14").value().board);
+    STATIC_REQUIRE(move(pawn_capture) == before);
+  }
+  {
+    static constexpr auto move = [](auto board) {
+      board.apply_capture(Color::WHITE, PieceType::KNIGHT, to_bitboard(Square::H3), to_bitboard(Square::G5),
+                          PieceType::QUEEN);
+      return board;
+    };
+    static constexpr auto knight_capture = move(before);
+    STATIC_REQUIRE(knight_capture ==
+                   parse_fen("r3kb1r/nppb2p1/3p4/1B1np1Np/p1K1p2P/P1P2P2/RP1P2P1/1NBQR3 b kq - 0 14").value().board);
+    STATIC_REQUIRE(move(knight_capture) == before);
+  }
+  {
+    static constexpr auto move = [](auto board) {
+      board.apply_capture(Color::WHITE, PieceType::BISHOP, to_bitboard(Square::B5), to_bitboard(Square::D7),
+                          PieceType::BISHOP);
+      return board;
+    };
+    static constexpr auto bishop_capture = move(before);
+    STATIC_REQUIRE(bishop_capture ==
+                   parse_fen("r3kb1r/nppB2p1/3p4/3np1qp/p1K1p2P/P1P2P1N/RP1P2P1/1NBQR3 b kq - 0 14").value().board);
+    STATIC_REQUIRE(move(bishop_capture) == before);
+  }
+  {
+    static constexpr auto move = [](auto board) {
+      board.apply_capture(Color::WHITE, PieceType::ROOK, to_bitboard(Square::E1), to_bitboard(Square::E4),
+                          PieceType::PAWN);
+      return board;
+    };
+    static constexpr auto rook_capture = move(before);
+    STATIC_REQUIRE(rook_capture ==
+                   parse_fen("r3kb1r/nppb2p1/3p4/1B1np1qp/p1K1R2P/P1P2P1N/RP1P2P1/1NBQ4 b kq - 0 14").value().board);
+    STATIC_REQUIRE(move(rook_capture) == before);
+  }
+  {
+    static constexpr auto move = [](auto board) {
+      board.apply_capture(Color::WHITE, PieceType::QUEEN, to_bitboard(Square::D1), to_bitboard(Square::A4),
+                          PieceType::PAWN);
+      return board;
+    };
+    static constexpr auto queen_capture = move(before);
+    STATIC_REQUIRE(queen_capture ==
+                   parse_fen("r3kb1r/nppb2p1/3p4/1B1np1qp/Q1K1p2P/P1P2P1N/RP1P2P1/1NB1R3 b kq - 0 14").value().board);
+    STATIC_REQUIRE(move(queen_capture) == before);
+  }
+  {
+    static constexpr auto move = [](auto board) {
+      board.apply_capture(Color::WHITE, PieceType::KING, to_bitboard(Square::C4), to_bitboard(Square::D5),
+                          PieceType::KNIGHT);
+      return board;
+    };
+    static constexpr auto king_capture = move(before);
+    STATIC_REQUIRE(king_capture ==
+                   parse_fen("r3kb1r/nppb2p1/3p4/1B1Kp1qp/p3p2P/P1P2P1N/RP1P2P1/1NBQR3 b kq - 0 14").value().board);
+    STATIC_REQUIRE(move(king_capture) == before);
+  }
+}
+
+TEST_CASE("castle") {
+  static constexpr auto before = parse_fen("r3k2r/1b4bq/8/8/8/8/7B/R3K2R w KQkq - 0 1").value().board;
+  {
+    static constexpr auto move = [](auto board) {
+      board.apply_castle(Color::WHITE, to_bitboard(Square::E1), to_bitboard(Square::G1), to_bitboard(Square::H1),
+                         to_bitboard(Square::F1));
+      return board;
+    };
+    static constexpr auto kingside_castle = move(before);
+    STATIC_REQUIRE(kingside_castle == parse_fen("r3k2r/1b4bq/8/8/8/8/7B/R4RK1 b kq - 1 1").value().board);
+    STATIC_REQUIRE(move(kingside_castle) == before);
+  }
+  {
+    static constexpr auto move = [](auto board) {
+      board.apply_castle(Color::WHITE, to_bitboard(Square::E1), to_bitboard(Square::C1), to_bitboard(Square::A1),
+                         to_bitboard(Square::D1));
+      return board;
+    };
+    static constexpr auto queenside_castle = move(before);
+    STATIC_REQUIRE(queenside_castle == parse_fen("r3k2r/1b4bq/8/8/8/8/7B/2KR3R b kq - 1 1").value().board);
+    STATIC_REQUIRE(move(queenside_castle) == before);
+  }
+}
+
+TEST_CASE("quiet promotion") {
+  static constexpr auto before = parse_fen("4k3/1P6/8/8/8/8/K7/8 w - - 0 1").value().board;
+  static constexpr auto move = [](auto board, const auto promotion) {
+    board.apply_quiet_promotion(Color::WHITE, to_bitboard(Square::B7), to_bitboard(Square::B8), promotion);
+    return board;
+  };
+  {
+    static constexpr auto knight_promotion = move(before, PieceType::KNIGHT);
+    STATIC_REQUIRE(knight_promotion == parse_fen("1N2k3/8/8/8/8/8/K7/8 b - - 0 1").value().board);
+    STATIC_REQUIRE(move(knight_promotion, PieceType::KNIGHT) == before);
+  }
+  {
+    static constexpr auto bishop_promotion = move(before, PieceType::BISHOP);
+    STATIC_REQUIRE(bishop_promotion == parse_fen("1B2k3/8/8/8/8/8/K7/8 b - - 0 1").value().board);
+    STATIC_REQUIRE(move(bishop_promotion, PieceType::BISHOP) == before);
+  }
+  {
+    static constexpr auto rook_promotion = move(before, PieceType::ROOK);
+    STATIC_REQUIRE(rook_promotion == parse_fen("1R2k3/8/8/8/8/8/K7/8 b - - 0 1").value().board);
+    STATIC_REQUIRE(move(rook_promotion, PieceType::ROOK) == before);
+  }
+  {
+    static constexpr auto queen_promotion = move(before, PieceType::QUEEN);
+    STATIC_REQUIRE(queen_promotion == parse_fen("1Q2k3/8/8/8/8/8/K7/8 b - - 0 1").value().board);
+    STATIC_REQUIRE(move(queen_promotion, PieceType::QUEEN) == before);
+  }
+}
+
+TEST_CASE("capture promotion") {
+  static constexpr auto before = parse_fen("2q1k3/1P6/8/8/8/8/K7/8 w - - 0 1").value().board;
+  static constexpr auto move = [](auto board, const auto promotion) {
+    board.apply_capture_promotion(Color::WHITE, to_bitboard(Square::B7), to_bitboard(Square::C8), promotion,
+                                  PieceType::QUEEN);
+    return board;
+  };
+  {
+    static constexpr auto knight_promotion = move(before, PieceType::KNIGHT);
+    STATIC_REQUIRE(knight_promotion == parse_fen("2N1k3/8/8/8/8/8/K7/8 b - - 0 1").value().board);
+    STATIC_REQUIRE(move(knight_promotion, PieceType::KNIGHT) == before);
+  }
+  {
+    static constexpr auto bishop_promotion = move(before, PieceType::BISHOP);
+    STATIC_REQUIRE(bishop_promotion == parse_fen("2B1k3/8/8/8/8/8/K7/8 b - - 0 1").value().board);
+    STATIC_REQUIRE(move(bishop_promotion, PieceType::BISHOP) == before);
+  }
+  {
+    static constexpr auto rook_promotion = move(before, PieceType::ROOK);
+    STATIC_REQUIRE(rook_promotion == parse_fen("2R1k3/8/8/8/8/8/K7/8 b - - 0 1").value().board);
+    STATIC_REQUIRE(move(rook_promotion, PieceType::ROOK) == before);
+  }
+  {
+    static constexpr auto queen_promotion = move(before, PieceType::QUEEN);
+    STATIC_REQUIRE(queen_promotion == parse_fen("2Q1k3/8/8/8/8/8/K7/8 b - - 0 1").value().board);
+    STATIC_REQUIRE(move(queen_promotion, PieceType::QUEEN) == before);
+  }
+}
+
+TEST_CASE("en passant") {
+  static constexpr auto before = parse_fen("8/8/1k6/2b5/2pP4/8/5K2/8 b - d3 0 1").value().board;
+  static constexpr auto move = [](auto board) {
+    board.apply_en_passant_capture(Color::BLACK, to_bitboard(Square::C4), to_bitboard(Square::D3),
+                                   to_bitboard(Square::D4));
+    return board;
+  };
+  static constexpr auto after = move(before);
+  STATIC_REQUIRE(after == parse_fen("8/8/1k6/2b5/8/3p4/5K2/8 w - - 0 2").value().board);
+  STATIC_REQUIRE(move(after) == before);
+}
 }  // namespace
 }  // namespace prodigy
