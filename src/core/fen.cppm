@@ -129,8 +129,16 @@ constexpr std::expected<Position, std::string_view> parse_fen(const std::string_
         if (field == "-") {
           break;
         }
-        if (const auto file = magic_enum::enum_cast<Square>(field, magic_enum::case_insensitive).transform(file_of)) {
-          position.en_passant_target = file;
+        if (const auto en_passant_target = magic_enum::enum_cast<Square>(field, magic_enum::case_insensitive);
+            en_passant_target.transform(rank_of) == [&] {
+              switch (position.side_to_move) {
+                case Color::WHITE:
+                  return Rank::SIX;
+                case Color::BLACK:
+                  return Rank::THREE;
+              }
+            }()) {
+          position.en_passant_target = en_passant_target;
           break;
         }
         return std::unexpected("Invalid en passant target square.");

@@ -16,7 +16,7 @@ struct Position {
   Board board;
   Color side_to_move;
   CastlingRights castling_rights;
-  std::optional<File> en_passant_target;
+  std::optional<Square> en_passant_target;
   Ply halfmove_clock;
   std::uint16_t fullmove_number;
 
