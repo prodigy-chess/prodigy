@@ -33,7 +33,7 @@
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_CXX_FLAGS":
-            "-Wall -Wextra -Wpedantic -Wimplicit-fallthrough -Wold-style-cast -Wunreachable-code-aggressive -stdlib=libc++ -Wno-pre-c++2b-compat"
+            "-Wall -Wextra -Wpedantic -Wimplicit-fallthrough -Wold-style-cast -Wunreachable-code-aggressive -stdlib=libc++"
       }
     }
   ],
