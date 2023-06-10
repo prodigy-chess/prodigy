@@ -14,3 +14,4 @@ C++:
 Chess:
 - FEN: validate en passant target square (maybe add an EnPassantTarget enum?)
 - Magic bitboards: consider black magic bitboards, compact table by removing unused segment prefix/suffix
+- Magic bitboards: move implementation to .cpp
