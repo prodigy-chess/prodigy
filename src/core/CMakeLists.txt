@@ -12,6 +12,7 @@ target_sources(
           core.cppm
           direction.cppm
           fen.cppm
+          move.cppm
           piece_type.cppm
           ply.cppm
           position.cppm
