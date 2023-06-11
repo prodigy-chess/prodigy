@@ -7,6 +7,7 @@ export import :color;
 export import :containers;
 export import :direction;
 export import :fen;
+export import :move;
 export import :piece_type;
 export import :ply;
 export import :position;
