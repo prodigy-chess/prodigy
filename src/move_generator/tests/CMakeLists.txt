@@ -1,2 +1,2 @@
 add_catch_test(move_generator)
-add_catch_test(node_context DEPENDS magic_enum)
+add_catch_test(node DEPENDS magic_enum)

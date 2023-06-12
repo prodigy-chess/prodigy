@@ -7,7 +7,7 @@ target_sources(
           lookup.cppm
           magic_bitboards.cppm
           move_generator.cppm
-          node_context.cppm
+          node.cppm
 )
 target_link_libraries(move_generator PRIVATE core magic_enum)
 add_subdirectory(tests)
