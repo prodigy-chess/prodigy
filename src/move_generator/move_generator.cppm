@@ -5,6 +5,7 @@ module;
 
 export module prodigy.move_generator;
 
+export import :dispatch;
 export import :node;
 
 export namespace prodigy::move_generator {
