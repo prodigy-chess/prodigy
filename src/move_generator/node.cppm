@@ -50,6 +50,8 @@ struct Node {
     bool has_en_passant_target;
   };
 
+  friend consteval bool operator==(const Node&, const Node&) = default;
+
   Board board;
   Bitboard en_passant_target;
 };

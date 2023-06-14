@@ -4,10 +4,15 @@ target_sources(
   PRIVATE FILE_SET
           CXX_MODULES
           FILES
+          dispatch.cppm
           lookup.cppm
           magic_bitboards.cppm
           move_generator.cppm
           node.cppm
 )
-target_link_libraries(move_generator PRIVATE core magic_enum)
+target_link_libraries(
+  move_generator
+  PUBLIC core
+  PRIVATE magic_enum
+)
 add_subdirectory(tests)
