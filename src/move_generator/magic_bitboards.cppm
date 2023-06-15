@@ -24,9 +24,9 @@ class MagicBitboards {
     const auto make_attack_set = [](const auto origin, const auto occupancy) {
       Bitboard attack_set{};
       for (const auto direction : {DIRECTIONS...}) {
-        for (auto target = shift(to_bitboard(origin), direction); !empty(target); target = shift(target, direction)) {
+        for (auto target = shift(to_bitboard(origin), direction); any(target); target = shift(target, direction)) {
           attack_set |= target;
-          if (!empty(occupancy & target)) {
+          if (any(occupancy & target)) {
             break;
           }
         }
@@ -39,7 +39,7 @@ class MagicBitboards {
       do {
         masked_occupancy_to_attack_set.emplace_back(subset, make_attack_set(origin, subset));
         subset = Bitboard{std::to_underlying(subset) - std::to_underlying(occupancy_mask)} & occupancy_mask;
-      } while (!empty(subset));
+      } while (any(subset));
       return masked_occupancy_to_attack_set;
     };
     auto make_random_sparse_magic = [random_engine = std::default_random_engine(std::random_device()()),
@@ -52,21 +52,20 @@ class MagicBitboards {
       const auto segment = table.first<segment_size(origin)>();
       table = table.subspan(segment.size());
       const auto occupancy_mask = make_occupancy_mask(origin);
-      const auto shift = std::popcount(~std::to_underlying(occupancy_mask));
+      const auto shift = popcount(~occupancy_mask);
       const auto try_fill_segment = [&, masked_occupancy_to_attack_set = make_masked_occupancy_to_attack_set(
                                             origin, occupancy_mask)](const auto magic) {
         std::ranges::fill(segment, Bitboard());
         return std::ranges::all_of(masked_occupancy_to_attack_set, [&](const auto& masked_occupancy_and_attack_set) {
           const auto& [masked_occupancy, attack_set] = masked_occupancy_and_attack_set;
           const auto entry = std::exchange(segment[index(masked_occupancy, occupancy_mask, magic, shift)], attack_set);
-          return empty(entry) || entry == attack_set;
+          return !any(entry) || entry == attack_set;
         });
       };
       const auto magic = [&] {
         while (true) {
           const auto magic = make_random_sparse_magic();
-          if (std::popcount(index(occupancy_mask, occupancy_mask, magic, shift)) <
-              std::popcount(std::to_underlying(occupancy_mask)) * 2 / 3) {
+          if (std::popcount(index(occupancy_mask, occupancy_mask, magic, shift)) < popcount(occupancy_mask) * 2 / 3) {
             continue;
           }
           if (try_fill_segment(magic)) {
@@ -106,7 +105,7 @@ class MagicBitboards {
   static constexpr Bitboard make_occupancy_mask(const Square origin) noexcept {
     Bitboard occupancy_mask{};
     for (const auto direction : {DIRECTIONS...}) {
-      for (auto target = shift(to_bitboard(origin), direction); !empty(shift(target, direction));
+      for (auto target = shift(to_bitboard(origin), direction); any(shift(target, direction));
            target = shift(target, direction)) {
         occupancy_mask |= target;
       }
@@ -115,7 +114,7 @@ class MagicBitboards {
   }
 
   static constexpr std::size_t segment_size(const Square origin) noexcept {
-    return 1UZ << std::popcount(std::to_underlying(make_occupancy_mask(origin)));
+    return 1UZ << popcount(make_occupancy_mask(origin));
   }
 
   inline static std::array<Bitboard,

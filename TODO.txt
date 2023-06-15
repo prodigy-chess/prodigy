@@ -14,4 +14,3 @@ Chess:
 - Magic bitboards: consider black magic bitboards, compact table by removing unused segment prefix/suffix
 - Magic bitboards: move implementation to .cpp
 - Node: try aligning to cache line size
-- `empty` -> `any`, add `popcount`

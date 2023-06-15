@@ -9,13 +9,13 @@ namespace prodigy {
 namespace {
 using namespace magic_enum;
 
-TEST_CASE("empty") {
+TEST_CASE("any") {
   static constexpr Board board;
   enum_for_each<Color>([](const auto color) {
-    enum_for_each<PieceType>([&](const auto piece_type) { STATIC_REQUIRE(empty(board[color, piece_type])); });
-    STATIC_REQUIRE(empty(board[color]));
+    enum_for_each<PieceType>([&](const auto piece_type) { STATIC_REQUIRE_FALSE(any(board[color, piece_type])); });
+    STATIC_REQUIRE_FALSE(any(board[color]));
   });
-  STATIC_REQUIRE(empty(board.occupancy()));
+  STATIC_REQUIRE_FALSE(any(board.occupancy()));
 }
 
 TEST_CASE("starting board") {
@@ -87,7 +87,7 @@ TEST_CASE("quiet move") {
       parse_fen("rnbqkbnr/1pp2ppp/3p4/p3p3/4P2P/5P2/PPPP2P1/RNBQKBNR w KQkq - 0 4").value().board;
   {
     static constexpr auto move = [](auto board) {
-      board.move({
+      board.apply({
           .origin = to_bitboard(Square::G2),
           .target = to_bitboard(Square::G3),
           .side_to_move = Color::WHITE,
@@ -102,7 +102,7 @@ TEST_CASE("quiet move") {
   }
   {
     static constexpr auto move = [](auto board) {
-      board.move({
+      board.apply({
           .origin = to_bitboard(Square::G2),
           .target = to_bitboard(Square::G4),
           .side_to_move = Color::WHITE,
@@ -117,7 +117,7 @@ TEST_CASE("quiet move") {
   }
   {
     static constexpr auto move = [](auto board) {
-      board.move({
+      board.apply({
           .origin = to_bitboard(Square::G1),
           .target = to_bitboard(Square::E2),
           .side_to_move = Color::WHITE,
@@ -132,7 +132,7 @@ TEST_CASE("quiet move") {
   }
   {
     static constexpr auto move = [](auto board) {
-      board.move({
+      board.apply({
           .origin = to_bitboard(Square::F1),
           .target = to_bitboard(Square::B5),
           .side_to_move = Color::WHITE,
@@ -147,7 +147,7 @@ TEST_CASE("quiet move") {
   }
   {
     static constexpr auto move = [](auto board) {
-      board.move({
+      board.apply({
           .origin = to_bitboard(Square::H1),
           .target = to_bitboard(Square::H3),
           .side_to_move = Color::WHITE,
@@ -162,7 +162,7 @@ TEST_CASE("quiet move") {
   }
   {
     static constexpr auto move = [](auto board) {
-      board.move({
+      board.apply({
           .origin = to_bitboard(Square::D1),
           .target = to_bitboard(Square::E2),
           .side_to_move = Color::WHITE,
@@ -177,7 +177,7 @@ TEST_CASE("quiet move") {
   }
   {
     static constexpr auto move = [](auto board) {
-      board.move({
+      board.apply({
           .origin = to_bitboard(Square::E1),
           .target = to_bitboard(Square::F2),
           .side_to_move = Color::WHITE,
@@ -197,7 +197,7 @@ TEST_CASE("capture") {
       parse_fen("r3kb1r/nppb2p1/3p4/1B1np1qp/p1K1p2P/P1P2P1N/RP1P2P1/1NBQR3 w kq - 0 14").value().board;
   {
     static constexpr auto move = [](auto board) {
-      board.move({
+      board.apply({
           .origin = to_bitboard(Square::F3),
           .target = to_bitboard(Square::E4),
           .side_to_move = Color::WHITE,
@@ -213,7 +213,7 @@ TEST_CASE("capture") {
   }
   {
     static constexpr auto move = [](auto board) {
-      board.move({
+      board.apply({
           .origin = to_bitboard(Square::H3),
           .target = to_bitboard(Square::G5),
           .side_to_move = Color::WHITE,
@@ -229,7 +229,7 @@ TEST_CASE("capture") {
   }
   {
     static constexpr auto move = [](auto board) {
-      board.move({
+      board.apply({
           .origin = to_bitboard(Square::B5),
           .target = to_bitboard(Square::D7),
           .side_to_move = Color::WHITE,
@@ -245,7 +245,7 @@ TEST_CASE("capture") {
   }
   {
     static constexpr auto move = [](auto board) {
-      board.move({
+      board.apply({
           .origin = to_bitboard(Square::E1),
           .target = to_bitboard(Square::E4),
           .side_to_move = Color::WHITE,
@@ -261,7 +261,7 @@ TEST_CASE("capture") {
   }
   {
     static constexpr auto move = [](auto board) {
-      board.move({
+      board.apply({
           .origin = to_bitboard(Square::D1),
           .target = to_bitboard(Square::A4),
           .side_to_move = Color::WHITE,
@@ -277,7 +277,7 @@ TEST_CASE("capture") {
   }
   {
     static constexpr auto move = [](auto board) {
-      board.move({
+      board.apply({
           .origin = to_bitboard(Square::C4),
           .target = to_bitboard(Square::D5),
           .side_to_move = Color::WHITE,
@@ -297,7 +297,7 @@ TEST_CASE("castle") {
   static constexpr auto before = parse_fen("r3k2r/1b4bq/8/8/8/8/7B/R3K2R w KQkq - 0 1").value().board;
   {
     static constexpr auto move = [](auto board) {
-      board.move({
+      board.apply({
           .king_origin = to_bitboard(Square::E1),
           .king_target = to_bitboard(Square::G1),
           .rook_origin = to_bitboard(Square::H1),
@@ -312,7 +312,7 @@ TEST_CASE("castle") {
   }
   {
     static constexpr auto move = [](auto board) {
-      board.move({
+      board.apply({
           .king_origin = to_bitboard(Square::E1),
           .king_target = to_bitboard(Square::C1),
           .rook_origin = to_bitboard(Square::A1),
@@ -330,7 +330,7 @@ TEST_CASE("castle") {
 TEST_CASE("quiet promotion") {
   static constexpr auto before = parse_fen("4k3/1P6/8/8/8/8/K7/8 w - - 0 1").value().board;
   static constexpr auto move = [](auto board, const auto promotion) {
-    board.move(QuietPromotion{
+    board.apply(QuietPromotion{
         .origin = to_bitboard(Square::B7),
         .target = to_bitboard(Square::B8),
         .side_to_move = Color::WHITE,
@@ -363,7 +363,7 @@ TEST_CASE("quiet promotion") {
 TEST_CASE("capture promotion") {
   static constexpr auto before = parse_fen("2q1k3/1P6/8/8/8/8/K7/8 w - - 0 1").value().board;
   static constexpr auto move = [](auto board, const auto promotion) {
-    board.move({
+    board.apply({
         .origin = to_bitboard(Square::B7),
         .target = to_bitboard(Square::C8),
         .side_to_move = Color::WHITE,
@@ -397,7 +397,7 @@ TEST_CASE("capture promotion") {
 TEST_CASE("en passant") {
   static constexpr auto before = parse_fen("8/8/1k6/2b5/2pP4/8/5K2/8 b - d3 0 1").value().board;
   static constexpr auto move = [](auto board) {
-    board.move({
+    board.apply({
         .origin = to_bitboard(Square::C4),
         .target = to_bitboard(Square::D3),
         .victim_origin = to_bitboard(Square::D4),

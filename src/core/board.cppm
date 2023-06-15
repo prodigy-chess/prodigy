@@ -35,21 +35,21 @@ class Board {
 
   constexpr Bitboard occupancy() const noexcept { return occupancy_; }
 
-  constexpr void move(const QuietMove& move) noexcept {
+  constexpr void apply(const QuietMove& move) noexcept {
     const auto& [origin, target, side_to_move, piece_type] = move;
     const auto mask = origin | target;
     toggle(side_to_move, piece_type, mask);
     occupancy_ ^= mask;
   }
 
-  constexpr void move(const Capture& move) noexcept {
+  constexpr void apply(const Capture& move) noexcept {
     const auto& [origin, target, side_to_move, aggressor, victim] = move;
     toggle(side_to_move, aggressor, origin | target);
     toggle(!side_to_move, victim, target);
     occupancy_ ^= origin;
   }
 
-  constexpr void move(const Castle& move) noexcept {
+  constexpr void apply(const Castle& move) noexcept {
     const auto& [king_origin, king_target, rook_origin, rook_target, side_to_move] = move;
     const auto king_mask = king_origin | king_target;
     pieces_[side_to_move][PieceType::KING] ^= king_mask;
@@ -60,7 +60,7 @@ class Board {
     occupancy_ ^= color_mask;
   }
 
-  constexpr void move(const QuietPromotion& move) noexcept {
+  constexpr void apply(const QuietPromotion& move) noexcept {
     const auto& [origin, target, side_to_move, promotion] = move;
     pieces_[side_to_move][PieceType::PAWN] ^= origin;
     pieces_[side_to_move][promotion] ^= target;
@@ -69,7 +69,7 @@ class Board {
     occupancy_ ^= color_mask;
   }
 
-  constexpr void move(const CapturePromotion& move) noexcept {
+  constexpr void apply(const CapturePromotion& move) noexcept {
     const auto& [origin, target, side_to_move, promotion, victim] = move;
     pieces_[side_to_move][PieceType::PAWN] ^= origin;
     pieces_[side_to_move][promotion] ^= target;
@@ -78,9 +78,9 @@ class Board {
     occupancy_ ^= origin;
   }
 
-  constexpr void move(const EnPassantCapture& move) noexcept {
+  constexpr void apply(const EnPassantCapture& move) noexcept {
     const auto& [origin, target, victim_origin, side_to_move] = move;
-    this->move({
+    apply({
         .origin = origin,
         .target = target,
         .side_to_move = side_to_move,

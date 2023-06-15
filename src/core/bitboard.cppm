@@ -1,5 +1,6 @@
 module;
 
+#include <bit>
 #include <cstdint>
 #include <magic_enum.hpp>
 #include <utility>
@@ -18,7 +19,9 @@ PRODIGY_ENUM_BITWISE_OPERATORS(Bitboard)
 
 constexpr Bitboard to_bitboard(const Square square) noexcept { return Bitboard{1ULL << std::to_underlying(square)}; }
 
-constexpr bool empty(const Bitboard bitboard) noexcept { return !static_cast<bool>(bitboard); }
+constexpr bool any(const Bitboard bitboard) noexcept { return static_cast<bool>(bitboard); }
+
+constexpr int popcount(const Bitboard bitboard) noexcept { return std::popcount(std::to_underlying(bitboard)); }
 
 constexpr Bitboard shift(const Bitboard bitboard, const Direction direction) noexcept {
   static constexpr auto off_mask = [](const auto file) consteval {
