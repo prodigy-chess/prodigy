@@ -9,6 +9,8 @@ target_sources(
           magic_bitboards.cppm
           move_generator.cppm
           node.cppm
+          visitor.cppm
+          walk.cppm
 )
 target_link_libraries(
   move_generator
@@ -16,3 +18,5 @@ target_link_libraries(
   PRIVATE magic_enum
 )
 add_subdirectory(tests)
+
+add_subdirectory(perft)
