@@ -1,6 +1,7 @@
 module;
 
 #include <bit>
+#include <cassert>
 #include <cstdint>
 #include <magic_enum.hpp>
 #include <utility>
@@ -18,6 +19,11 @@ enum class Bitboard : std::uint64_t {};
 PRODIGY_ENUM_BITWISE_OPERATORS(Bitboard)
 
 constexpr Bitboard to_bitboard(const Square square) noexcept { return Bitboard{1ULL << std::to_underlying(square)}; }
+
+constexpr Square square_of(const Bitboard bitboard) noexcept {
+  assert(std::has_single_bit(std::to_underlying(bitboard)));
+  return static_cast<Square>(std::countr_zero(std::to_underlying(bitboard)));
+}
 
 constexpr bool any(const Bitboard bitboard) noexcept { return static_cast<bool>(bitboard); }
 
