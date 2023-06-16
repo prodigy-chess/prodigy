@@ -8,9 +8,11 @@ namespace prodigy {
 namespace {
 using namespace magic_enum;
 
-TEST_CASE("to_bitboard") {
+TEST_CASE("square") {
   enum_for_each<Square>([](const auto square) {
-    STATIC_REQUIRE(to_bitboard(square) == Bitboard{1ULL << std::to_underlying(square.value)});
+    static constexpr auto bitboard = to_bitboard(square);
+    STATIC_REQUIRE(bitboard == Bitboard{1ULL << std::to_underlying(square.value)});
+    STATIC_REQUIRE(square_of(bitboard) == square);
   });
 }
 
