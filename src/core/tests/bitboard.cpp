@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <magic_enum.hpp>
+#include <set>
 #include <utility>
 
 import prodigy.core;
@@ -101,6 +102,33 @@ TEST_CASE("shift") {
       }
     });
   });
+}
+
+TEST_CASE("for_each") {
+  static constexpr auto no_bits = Bitboard();
+  static constexpr auto all_bits = ~no_bits;
+
+  for_each_bit(no_bits, [](auto) { FAIL(); });
+  Bitboard bits{};
+  for_each_bit(all_bits, [&](const auto bit) {
+    REQUIRE_FALSE(any(bits & bit));
+    bits |= bit;
+  });
+  REQUIRE(bits == all_bits);
+
+  for_each_square(no_bits, [](auto) { FAIL(); });
+  std::set<Square> squares;
+  for_each_square(all_bits, [&](const auto square) { REQUIRE(squares.emplace(square).second); });
+  REQUIRE(squares.size() == enum_count<Square>());
+
+  for_each_bit_and_square(no_bits, [](auto...) { FAIL(); });
+  for_each_bit_and_square(all_bits, [&](const auto bit, const auto square) {
+    REQUIRE(any(bits & bit));
+    bits ^= bit;
+    REQUIRE(squares.erase(square));
+  });
+  REQUIRE_FALSE(any(bits));
+  REQUIRE(squares.empty());
 }
 }  // namespace
 }  // namespace prodigy
