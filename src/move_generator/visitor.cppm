@@ -14,38 +14,38 @@ template <typename Derived>
 class Visitor {
  public:
   template <Node::Context context>
-  constexpr void visit_pawn_move(const QuietMove& double_push, const Bitboard en_passant_target) const noexcept {
-    static_cast<const Derived*>(this)->template visit_pawn_move<context>(double_push, en_passant_target);
+  constexpr void visit_pawn_move(const QuietMove& double_push, const Bitboard en_passant_target) {
+    static_cast<Derived*>(this)->template visit_pawn_move<context>(double_push, en_passant_target);
   }
 
   template <Node::Context context, typename Move>
-  constexpr void visit_pawn_move(const Move& move) const noexcept {
-    static_cast<const Derived*>(this)->template visit_pawn_move<context>(move);
+  constexpr void visit_pawn_move(const Move& move) {
+    static_cast<Derived*>(this)->template visit_pawn_move<context>(move);
   }
 
   template <Node::Context context, typename Move>
-  constexpr void visit_knight_move(const Move& move) const noexcept {
-    static_cast<const Derived*>(this)->template visit_knight_move<context>(move);
+  constexpr void visit_knight_move(const Move& move) {
+    static_cast<Derived*>(this)->template visit_knight_move<context>(move);
   }
 
   template <Node::Context context, typename Move>
-  constexpr void visit_bishop_move(const Move& move) const noexcept {
-    static_cast<const Derived*>(this)->template visit_bishop_move<context>(move);
+  constexpr void visit_bishop_move(const Move& move) {
+    static_cast<Derived*>(this)->template visit_bishop_move<context>(move);
   }
 
   template <Node::Context context, typename Move>
-  constexpr void visit_rook_move(const Move& move) const noexcept {
-    static_cast<const Derived*>(this)->template visit_rook_move<context>(move);
+  constexpr void visit_rook_move(const Move& move) {
+    static_cast<Derived*>(this)->template visit_rook_move<context>(move);
   }
 
   template <Node::Context context, typename Move>
-  constexpr void visit_queen_move(const Move& move) const noexcept {
-    static_cast<const Derived*>(this)->template visit_queen_move<context>(move);
+  constexpr void visit_queen_move(const Move& move) {
+    static_cast<Derived*>(this)->template visit_queen_move<context>(move);
   }
 
   template <Node::Context context, typename Move>
-  constexpr void visit_king_move(const Move& move) const noexcept {
-    static_cast<const Derived*>(this)->template visit_king_move<context>(move);
+  constexpr void visit_king_move(const Move& move) {
+    static_cast<Derived*>(this)->template visit_king_move<context>(move);
   }
 
  private:
@@ -71,8 +71,7 @@ class Visitor {
 
  protected:
   template <typename Move>
-  static constexpr auto scoped_move(Node& node, const Move& move,
-                                    const Bitboard en_passant_target = Bitboard()) noexcept {
+  static constexpr auto scoped_move(Node& node, const Move& move, const Bitboard en_passant_target = Bitboard()) {
     return AutoUndo([&] {
       node.board.apply(move);
       node.en_passant_target ^= en_passant_target;

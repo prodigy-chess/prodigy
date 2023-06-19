@@ -4,7 +4,7 @@ import :node;
 
 export namespace prodigy::move_generator {
 template <Node::Context, typename Visitor>
-void walk(const Node&, Visitor&&) noexcept {
+void walk(const Node&, Visitor&&) {
   // TODO
 }
 }  // namespace prodigy::move_generator

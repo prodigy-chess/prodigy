@@ -19,43 +19,43 @@ class Visitor : public move_generator::Visitor<Visitor<depth>> {
       : node_(node), leaf_node_count_(leaf_node_count) {}
 
   template <Node::Context context>
-  constexpr void visit_pawn_move(const QuietMove& double_push, const Bitboard en_passant_target) const noexcept {
+  constexpr void visit_pawn_move(const QuietMove& double_push, const Bitboard en_passant_target) const {
     visit<context>(double_push, en_passant_target);
   }
 
   template <Node::Context context, typename Move>
-  constexpr void visit_pawn_move(const Move& move) const noexcept {
+  constexpr void visit_pawn_move(const Move& move) const {
     visit<context>(move);
   }
 
   template <Node::Context context, typename Move>
-  constexpr void visit_knight_move(const Move& move) const noexcept {
+  constexpr void visit_knight_move(const Move& move) const {
     visit<context>(move);
   }
 
   template <Node::Context context, typename Move>
-  constexpr void visit_bishop_move(const Move& move) const noexcept {
+  constexpr void visit_bishop_move(const Move& move) const {
     visit<context>(move);
   }
 
   template <Node::Context context, typename Move>
-  constexpr void visit_rook_move(const Move& move) const noexcept {
+  constexpr void visit_rook_move(const Move& move) const {
     visit<context>(move);
   }
 
   template <Node::Context context, typename Move>
-  constexpr void visit_queen_move(const Move& move) const noexcept {
+  constexpr void visit_queen_move(const Move& move) const {
     visit<context>(move);
   }
 
   template <Node::Context context, typename Move>
-  constexpr void visit_king_move(const Move& move) const noexcept {
+  constexpr void visit_king_move(const Move& move) const {
     visit<context>(move);
   }
 
  private:
   template <Node::Context context, typename Move>
-  constexpr void visit(const Move& move, const Bitboard en_passant_target = Bitboard()) const noexcept {
+  constexpr void visit(const Move& move, const Bitboard en_passant_target = Bitboard()) const {
     if constexpr (depth == Ply{0}) {
       ++leaf_node_count_;
     } else {
@@ -69,7 +69,7 @@ class Visitor : public move_generator::Visitor<Visitor<depth>> {
 };
 }  // namespace
 
-std::expected<std::uint64_t, std::string_view> run(const std::string_view fen, const Ply depth) noexcept {
+std::expected<std::uint64_t, std::string_view> run(const std::string_view fen, const Ply depth) {
   const auto position = parse_fen(fen);
   if (!position.has_value()) {
     return std::unexpected(position.error());

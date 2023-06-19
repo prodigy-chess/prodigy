@@ -9,5 +9,5 @@ export module prodigy.move_generator.perft;
 import prodigy.core;
 
 export namespace prodigy::move_generator::perft {
-std::expected<std::uint64_t, std::string_view> run(std::string_view fen, Ply) noexcept;
+std::expected<std::uint64_t, std::string_view> run(std::string_view fen, Ply);
 }
