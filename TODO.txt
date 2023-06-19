@@ -7,9 +7,6 @@ Tooling:
 - clang-tidy
 - coverage
 
-C++:
-- consider consteval if possible
-
 Chess:
 - Magic bitboards: consider black magic bitboards, compact table by removing unused segment prefix/suffix
 - Magic bitboards: move implementation to .cpp
