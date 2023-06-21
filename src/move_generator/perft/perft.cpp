@@ -59,7 +59,7 @@ class Visitor : public move_generator::Visitor<Visitor<depth>> {
     if constexpr (depth == Ply{0}) {
       ++leaf_node_count_;
     } else {
-      const auto undo = scoped_move(node_, move, en_passant_target);
+      const auto undo = this->scoped_move(node_, move, en_passant_target);
       walk<context>(node_, Visitor<Ply{std::to_underlying(depth) - 1}>(node_, leaf_node_count_));
     }
   }
