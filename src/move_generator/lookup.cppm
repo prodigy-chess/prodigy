@@ -88,4 +88,21 @@ constexpr Bitboard king_attack_set(const Square origin) noexcept {
   ();
   return attack_sets[origin];
 }
+
+constexpr Bitboard half_open_segment(const Square origin, const Square target) noexcept {
+  static constexpr auto segments = [] consteval {
+    EnumMap<Square, EnumMap<Square, Bitboard>> segments{};
+    magic_enum::enum_for_each<Square>([&](const auto origin) {
+      magic_enum::enum_for_each<Direction>([&](const auto direction) {
+        for (auto segment = Bitboard(), target = to_bitboard(origin); any(target);
+             segment |= target, target = shift(target, direction)) {
+          segments[origin][square_of(target)] = segment;
+        }
+      });
+    });
+    return segments;
+  }
+  ();
+  return segments[origin][target];
+}
 }  // namespace prodigy::move_generator
