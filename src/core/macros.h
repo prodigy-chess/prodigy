@@ -5,6 +5,8 @@
 #include <optional>
 
 #define PRODIGY_ENUM_BITWISE_OPERATORS(E)                                                                     \
+  constexpr bool any(const E value) noexcept { return static_cast<bool>(value); }                             \
+                                                                                                              \
   constexpr E operator~(const E value) noexcept { return ::magic_enum::bitwise_operators::operator~(value); } \
                                                                                                               \
   constexpr E operator|(const E lhs, const E rhs) noexcept {                                                  \

@@ -4,7 +4,6 @@ target_sources(
   PRIVATE FILE_SET
           CXX_MODULES
           FILES
-          color_traits.cppm
           dispatch.cppm
           lookup.cppm
           magic_bitboards.cppm
