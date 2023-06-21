@@ -25,8 +25,6 @@ constexpr Square square_of(const Bitboard bitboard) noexcept {
   return static_cast<Square>(std::countr_zero(std::to_underlying(bitboard)));
 }
 
-constexpr bool any(const Bitboard bitboard) noexcept { return static_cast<bool>(bitboard); }
-
 constexpr int popcount(const Bitboard bitboard) noexcept { return std::popcount(std::to_underlying(bitboard)); }
 
 constexpr Bitboard shift(const Bitboard bitboard, const Direction direction) noexcept {

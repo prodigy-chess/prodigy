@@ -4,6 +4,7 @@ export import :bitboard;
 export import :board;
 export import :castling_rights;
 export import :color;
+export import :color_traits;
 export import :containers;
 export import :direction;
 export import :fen;

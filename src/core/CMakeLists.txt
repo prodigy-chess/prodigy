@@ -8,6 +8,7 @@ target_sources(
           board.cppm
           castling_rights.cppm
           color.cppm
+          color_traits.cppm
           containers.cppm
           core.cppm
           direction.cppm
