@@ -5,7 +5,7 @@ module;
 #include <bit>
 #include <cstddef>
 #include <cstdint>
-#include <magic_enum.hpp>
+#include <magic_enum_utility.hpp>
 #include <random>
 #include <span>
 #include <type_traits>

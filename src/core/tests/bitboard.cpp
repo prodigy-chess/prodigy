@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <magic_enum.hpp>
+#include <magic_enum_utility.hpp>
 #include <set>
 #include <utility>
 
@@ -24,7 +25,7 @@ TEST_CASE("any") {
 
 TEST_CASE("popcount") {
   STATIC_REQUIRE(popcount(Bitboard()) == 0);
-  STATIC_REQUIRE(popcount(~Bitboard()) == magic_enum::enum_count<Square>());
+  STATIC_REQUIRE(popcount(~Bitboard()) == enum_count<Square>());
   enum_for_each<Square>([](const auto square) { STATIC_REQUIRE(popcount(to_bitboard(square)) == 1); });
 }
 
@@ -39,28 +40,28 @@ TEST_CASE("shift") {
           if constexpr (static constexpr auto shifted = shift(bitboard, Direction::NORTH); rank == Rank::EIGHT) {
             STATIC_REQUIRE_FALSE(any(shifted));
           } else {
-            STATIC_REQUIRE(shifted == to_bitboard(to_square(file, enum_value<Rank, std::to_underlying(rank) + 1>())));
+            STATIC_REQUIRE(shifted == to_bitboard(to_square(file, *enum_next_value(rank))));
           }
           break;
         case Direction::EAST:
           if constexpr (static constexpr auto shifted = shift(bitboard, Direction::EAST); file == File::H) {
             STATIC_REQUIRE_FALSE(any(shifted));
           } else {
-            STATIC_REQUIRE(shifted == to_bitboard(to_square(enum_value<File, std::to_underlying(file) + 1>(), rank)));
+            STATIC_REQUIRE(shifted == to_bitboard(to_square(*enum_next_value(file), rank)));
           }
           break;
         case Direction::SOUTH:
           if constexpr (static constexpr auto shifted = shift(bitboard, Direction::SOUTH); rank == Rank::ONE) {
             STATIC_REQUIRE_FALSE(any(shifted));
           } else {
-            STATIC_REQUIRE(shifted == to_bitboard(to_square(file, enum_value<Rank, std::to_underlying(rank) - 1>())));
+            STATIC_REQUIRE(shifted == to_bitboard(to_square(file, *enum_prev_value(rank))));
           }
           break;
         case Direction::WEST:
           if constexpr (static constexpr auto shifted = shift(bitboard, Direction::WEST); file == File::A) {
             STATIC_REQUIRE_FALSE(any(shifted));
           } else {
-            STATIC_REQUIRE(shifted == to_bitboard(to_square(enum_value<File, std::to_underlying(file) - 1>(), rank)));
+            STATIC_REQUIRE(shifted == to_bitboard(to_square(*enum_prev_value(file), rank)));
           }
           break;
         case Direction::NORTH_EAST:
@@ -68,8 +69,7 @@ TEST_CASE("shift") {
                         file == File::H || rank == Rank::EIGHT) {
             STATIC_REQUIRE_FALSE(any(shifted));
           } else {
-            STATIC_REQUIRE(shifted == to_bitboard(to_square(enum_value<File, std::to_underlying(file) + 1>(),
-                                                            enum_value<Rank, std::to_underlying(rank) + 1>())));
+            STATIC_REQUIRE(shifted == to_bitboard(to_square(*enum_next_value(file), *enum_next_value(rank))));
           }
           break;
         case Direction::SOUTH_EAST:
@@ -77,8 +77,7 @@ TEST_CASE("shift") {
                         file == File::H || rank == Rank::ONE) {
             STATIC_REQUIRE_FALSE(any(shifted));
           } else {
-            STATIC_REQUIRE(shifted == to_bitboard(to_square(enum_value<File, std::to_underlying(file) + 1>(),
-                                                            enum_value<Rank, std::to_underlying(rank) - 1>())));
+            STATIC_REQUIRE(shifted == to_bitboard(to_square(*enum_next_value(file), *enum_prev_value(rank))));
           }
           break;
         case Direction::SOUTH_WEST:
@@ -86,8 +85,7 @@ TEST_CASE("shift") {
                         file == File::A || rank == Rank::ONE) {
             STATIC_REQUIRE_FALSE(any(shifted));
           } else {
-            STATIC_REQUIRE(shifted == to_bitboard(to_square(enum_value<File, std::to_underlying(file) - 1>(),
-                                                            enum_value<Rank, std::to_underlying(rank) - 1>())));
+            STATIC_REQUIRE(shifted == to_bitboard(to_square(*enum_prev_value(file), *enum_prev_value(rank))));
           }
           break;
         case Direction::NORTH_WEST:
@@ -95,8 +93,7 @@ TEST_CASE("shift") {
                         file == File::A || rank == Rank::EIGHT) {
             STATIC_REQUIRE_FALSE(any(shifted));
           } else {
-            STATIC_REQUIRE(shifted == to_bitboard(to_square(enum_value<File, std::to_underlying(file) - 1>(),
-                                                            enum_value<Rank, std::to_underlying(rank) + 1>())));
+            STATIC_REQUIRE(shifted == to_bitboard(to_square(*enum_prev_value(file), *enum_next_value(rank))));
           }
           break;
       }
