@@ -93,6 +93,7 @@ constexpr Bitboard half_open_segment(const Square origin, const Square target) n
   static constexpr auto segments = [] consteval {
     EnumMap<Square, EnumMap<Square, Bitboard>> segments{};
     magic_enum::enum_for_each<Square>([&](const auto origin) {
+      magic_enum::enum_for_each<Square>([&](const auto target) { segments[origin][target] = to_bitboard(origin); });
       magic_enum::enum_for_each<Direction>([&](const auto direction) {
         for (auto segment = Bitboard(), target = to_bitboard(origin); any(target);
              segment |= target, target = shift(target, direction)) {
