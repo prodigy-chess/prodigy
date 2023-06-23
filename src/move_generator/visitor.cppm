@@ -52,7 +52,7 @@ class Visitor {
   template <std::invocable<> Undo>
   class AutoUndo {
    public:
-    constexpr explicit AutoUndo(Undo&& undo) : undo_(std::forward<Undo>(undo)) { std::forward<Undo>(undo_)(); }
+    constexpr explicit AutoUndo(Undo&& undo) noexcept : undo_(std::forward<Undo>(undo)) { std::forward<Undo>(undo_)(); }
 
     AutoUndo(const AutoUndo&) = delete;
     AutoUndo& operator=(const AutoUndo&) = delete;
@@ -71,7 +71,8 @@ class Visitor {
 
  protected:
   template <typename Move>
-  static constexpr auto scoped_move(Node& node, const Move& move, const Bitboard en_passant_target = Bitboard()) {
+  static constexpr auto scoped_move(Node& node, const Move& move,
+                                    const Bitboard en_passant_target = Bitboard()) noexcept {
     return AutoUndo([&] {
       node.board.apply(move);
       node.en_passant_target ^= en_passant_target;
