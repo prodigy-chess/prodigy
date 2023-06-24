@@ -27,27 +27,39 @@ constexpr Square square_of(const Bitboard bitboard) noexcept {
 
 constexpr int popcount(const Bitboard bitboard) noexcept { return std::popcount(std::to_underlying(bitboard)); }
 
+constexpr Bitboard unsafe_shift(const Bitboard bitboard, const Direction direction) noexcept {
+  switch (const auto shift = std::to_underlying(direction); direction) {
+    case Direction::NORTH:
+    case Direction::EAST:
+    case Direction::NORTH_EAST:
+    case Direction::NORTH_WEST:
+      return Bitboard{std::to_underlying(bitboard) << shift};
+    case Direction::SOUTH:
+    case Direction::WEST:
+    case Direction::SOUTH_EAST:
+    case Direction::SOUTH_WEST:
+      return Bitboard{std::to_underlying(bitboard) >> -shift};
+  }
+}
+
 constexpr Bitboard shift(const Bitboard bitboard, const Direction direction) noexcept {
   static constexpr auto off_mask = [](const auto file) consteval {
     Bitboard off_mask{};
     magic_enum::enum_for_each<Rank>([&](const auto rank) { off_mask |= to_bitboard(to_square(file, rank)); });
     return ~off_mask;
   };
-  switch (const auto shift = std::to_underlying(direction); direction) {
+  switch (const auto shifted = unsafe_shift(bitboard, direction); direction) {
     case Direction::NORTH:
-      return Bitboard{std::to_underlying(bitboard) << shift};
+    case Direction::SOUTH:
+      return shifted;
     case Direction::EAST:
     case Direction::NORTH_EAST:
-      return Bitboard{std::to_underlying(bitboard & off_mask(File::H)) << shift};
-    case Direction::SOUTH:
-      return Bitboard{std::to_underlying(bitboard) >> -shift};
+    case Direction::SOUTH_EAST:
+      return shifted & off_mask(File::A);
     case Direction::WEST:
     case Direction::SOUTH_WEST:
-      return Bitboard{std::to_underlying(bitboard & off_mask(File::A)) >> -shift};
-    case Direction::SOUTH_EAST:
-      return Bitboard{std::to_underlying(bitboard & off_mask(File::H)) >> -shift};
     case Direction::NORTH_WEST:
-      return Bitboard{std::to_underlying(bitboard & off_mask(File::A)) << shift};
+      return shifted & off_mask(File::H);
   }
 }
 
