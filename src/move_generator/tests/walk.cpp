@@ -10,18 +10,23 @@ import prodigy.move_generator;
 namespace prodigy::move_generator {
 namespace {
 struct MoveCounts {
-  std::uint64_t knight_quiet_moves = 0;
-  std::uint64_t knight_captures = 0;
-  std::uint64_t bishop_quiet_moves = 0;
-  std::uint64_t bishop_captures = 0;
-  std::uint64_t rook_quiet_moves = 0;
-  std::uint64_t rook_captures = 0;
-  std::uint64_t queen_quiet_moves = 0;
-  std::uint64_t queen_captures = 0;
-  std::uint64_t king_quiet_moves = 0;
-  std::uint64_t king_captures = 0;
-  std::uint64_t kingside_castles = 0;
-  std::uint64_t queenside_castles = 0;
+  std::uint64_t pawn_single_pushes;
+  std::uint64_t pawn_double_pushes;
+  std::uint64_t pawn_captures;
+  std::uint64_t quiet_promotions;
+  std::uint64_t capture_promotions;
+  std::uint64_t knight_quiet_moves;
+  std::uint64_t knight_captures;
+  std::uint64_t bishop_quiet_moves;
+  std::uint64_t bishop_captures;
+  std::uint64_t rook_quiet_moves;
+  std::uint64_t rook_captures;
+  std::uint64_t queen_quiet_moves;
+  std::uint64_t queen_captures;
+  std::uint64_t king_quiet_moves;
+  std::uint64_t king_captures;
+  std::uint64_t kingside_castles;
+  std::uint64_t queenside_castles;
 
   friend constexpr bool operator==(const MoveCounts&, const MoveCounts&) = default;
 };
@@ -29,6 +34,31 @@ struct MoveCounts {
 class Visitor : public move_generator::Visitor<Visitor> {
  public:
   constexpr explicit Visitor(MoveCounts& move_counts) noexcept : move_counts_(move_counts) {}
+
+  template <Node::Context>
+  constexpr void visit_pawn_move(const QuietMove&) const noexcept {
+    ++move_counts_.pawn_single_pushes;
+  }
+
+  template <Node::Context>
+  constexpr void visit_pawn_move(const QuietMove&, Bitboard) const noexcept {
+    ++move_counts_.pawn_double_pushes;
+  }
+
+  template <Node::Context>
+  constexpr void visit_pawn_move(const Capture&) const noexcept {
+    ++move_counts_.pawn_captures;
+  }
+
+  template <Node::Context>
+  constexpr void visit_pawn_move(const QuietPromotion&) const noexcept {
+    ++move_counts_.quiet_promotions;
+  }
+
+  template <Node::Context>
+  constexpr void visit_pawn_move(const CapturePromotion&) const noexcept {
+    ++move_counts_.capture_promotions;
+  }
 
   template <Node::Context>
   constexpr void visit_knight_move(const QuietMove&) const noexcept {
@@ -294,12 +324,63 @@ TEST_CASE("walk") {
               .king_quiet_moves = 6,
           },
       },
+      {
+          "7k/5P2/8/8/1p6/2pP4/1PP1P3/K7 w - - 0 1",
+          "unpinned pawn pushes",
+          {
+              .pawn_single_pushes = 3,
+              .pawn_double_pushes = 1,
+              .pawn_captures = 1,
+              .quiet_promotions = 4,
+              .king_quiet_moves = 2,
+          },
+      },
+      {
+          "4n1nk/5P2/8/8/1p6/2P1r3/1P1P4/K7 w - - 0 1",
+          "unpinned pawn captures",
+          {
+              .pawn_single_pushes = 3,
+              .pawn_double_pushes = 1,
+              .pawn_captures = 2,
+              .quiet_promotions = 4,
+              .capture_promotions = 8,
+              .king_quiet_moves = 2,
+          },
+      },
+      {
+          "1r5k/8/5b2/8/8/1PP5/1K3P1r/8 w - - 0 1",
+          "pinned pawn pushes",
+          {
+              .pawn_single_pushes = 1,
+              .king_quiet_moves = 6,
+          },
+      },
+      {
+          "2r3bk/1p3P2/b1P5/1P3b2/2K3Pr/8/8/8 w - - 0 1",
+          "pinned pawn captures",
+          {
+              .pawn_single_pushes = 1,
+              .pawn_captures = 1,
+              .capture_promotions = 4,
+              .king_quiet_moves = 6,
+          },
+      },
+      {
+          "7k/5P2/8/2b5/1P6/2n5/3PPK2/8 w - - 0 1",
+          "pawn check evasion moves",
+          {
+              .pawn_single_pushes = 1,
+              .pawn_double_pushes = 1,
+              .pawn_captures = 1,
+              .king_quiet_moves = 5,
+          },
+      },
   }));
   static_cast<void>(init());
   INFO(fen);
   INFO(context);
   dispatch(parse_fen(fen).value(), [&]<auto context>(const auto& node) {
-    MoveCounts move_counts;
+    MoveCounts move_counts{};
     walk<context>(node, Visitor(move_counts));
     REQUIRE(move_counts == expected_move_counts);
   });
