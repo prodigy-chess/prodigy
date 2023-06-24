@@ -1,3 +1,7 @@
+module;
+
+#include <magic_enum_utility.hpp>
+
 export module prodigy.core:color_traits;
 
 import :bitboard;
@@ -6,6 +10,16 @@ import :color;
 import :move;
 import :piece_type;
 import :square;
+
+namespace prodigy {
+namespace {
+consteval Bitboard on_mask(const Rank rank) noexcept {
+  Bitboard on_mask{};
+  magic_enum::enum_for_each<File>([&](const auto file) { on_mask |= to_bitboard(to_square(file, rank)); });
+  return on_mask;
+}
+}  // namespace
+}  // namespace prodigy
 
 export namespace prodigy {
 template <Color, PieceType>
@@ -59,9 +73,24 @@ struct CastlingTraits<Color::BLACK, PieceType::QUEEN> {
   };
 };
 
-template <Color color>
-struct ColorTraits {
+template <Color>
+struct ColorTraits;
+
+template <>
+struct ColorTraits<Color::WHITE> {
   template <PieceType side>
-  using CastlingTraits = CastlingTraits<color, side>;
+  using CastlingTraits = CastlingTraits<Color::WHITE, side>;
+
+  static constexpr auto PROMOTION_RANK = on_mask(Rank::EIGHT);
+  static constexpr auto EN_PASSANT_TARGET_RANK = on_mask(Rank::THREE);
+};
+
+template <>
+struct ColorTraits<Color::BLACK> {
+  template <PieceType side>
+  using CastlingTraits = CastlingTraits<Color::BLACK, side>;
+
+  static constexpr auto PROMOTION_RANK = on_mask(Rank::ONE);
+  static constexpr auto EN_PASSANT_TARGET_RANK = on_mask(Rank::SIX);
 };
 }  // namespace prodigy
