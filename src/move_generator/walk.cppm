@@ -111,6 +111,101 @@ constexpr std::pair<Bitboard, Bitboard> make_pinned_and_unpinned(const Board& bo
   return {pinned, origins ^ pinned};
 }
 
+template <Color side_to_move>
+constexpr void walk_pawn_pushes(const Board& board, const Bitboard check_mask, const Bitboard dg_pin_mask,
+                                const Bitboard hv_pin_mask, const auto& visit_single_push,
+                                const std::invocable<const QuietMove&, Bitboard> auto& visit_double_push) {
+  const auto walk_pushes = [&, empty = ~board.occupancy()](const auto origins, const auto target_mask) {
+    const auto unmasked_single_push_targets = pawn_single_push_set(side_to_move, origins) & empty;
+    const auto single_push_targets = unmasked_single_push_targets & target_mask;
+    const auto promotion_targets = single_push_targets & ColorTraits<side_to_move>::PROMOTION_RANK;
+    for_each_bit(promotion_targets, [&](const auto target) {
+      for (const auto promotion : {PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK, PieceType::QUEEN}) {
+        visit_single_push(QuietPromotion{
+            .origin = pawn_single_push_origin(side_to_move, target),
+            .target = target,
+            .side_to_move = side_to_move,
+            .promotion = promotion,
+        });
+      }
+    });
+    for_each_bit(single_push_targets ^ promotion_targets, [&](const auto target) {
+      visit_single_push(QuietMove{
+          .origin = pawn_single_push_origin(side_to_move, target),
+          .target = target,
+          .side_to_move = side_to_move,
+          .piece_type = PieceType::PAWN,
+      });
+    });
+    const auto double_push_targets =
+        pawn_single_push_set(side_to_move,
+                             unmasked_single_push_targets & ColorTraits<side_to_move>::EN_PASSANT_TARGET_RANK) &
+        empty & target_mask;
+    for_each_bit(double_push_targets, [&](const auto target) {
+      const auto en_passant_target = pawn_single_push_origin(side_to_move, target);
+      visit_double_push(
+          QuietMove{
+              .origin = pawn_single_push_origin(side_to_move, en_passant_target),
+              .target = target,
+              .side_to_move = side_to_move,
+              .piece_type = PieceType::PAWN,
+          },
+          en_passant_target);
+    });
+  };
+  const auto [pinned, unpinned] =
+      make_pinned_and_unpinned<side_to_move, PieceType::PAWN>(board, ~dg_pin_mask, hv_pin_mask);
+  walk_pushes(unpinned, check_mask);
+  walk_pushes(pinned, hv_pin_mask);
+}
+
+template <Color side_to_move>
+constexpr void walk_pawn_captures(const Board& board, const Bitboard check_mask, const Bitboard dg_pin_mask,
+                                  const Bitboard hv_pin_mask, const auto& visit_move) {
+  const auto walk_single_direction_captures = [&](const auto origins, const auto target_mask,
+                                                  const auto& lookup_attack_set, const auto& origin_of) {
+    const auto targets = lookup_attack_set(side_to_move, origins) & board[!side_to_move] & target_mask;
+    const auto promotion_targets = targets & ColorTraits<side_to_move>::PROMOTION_RANK;
+    for_each_bit(promotion_targets, [&](const auto target) {
+      for (const auto promotion : {PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK, PieceType::QUEEN}) {
+        visit_move(CapturePromotion{
+            .origin = origin_of(side_to_move, target),
+            .target = target,
+            .side_to_move = side_to_move,
+            .promotion = promotion,
+            .victim = capture_victim_at<side_to_move>(board, target),
+        });
+      }
+    });
+    for_each_bit(targets ^ promotion_targets, [&](const auto target) {
+      visit_move(Capture{
+          .origin = origin_of(side_to_move, target),
+          .target = target,
+          .side_to_move = side_to_move,
+          .aggressor = PieceType::PAWN,
+          .victim = capture_victim_at<side_to_move>(board, target),
+      });
+    });
+  };
+  const auto walk_captures = [&](const auto origins, const auto target_mask) {
+    walk_single_direction_captures(origins, target_mask, pawn_left_attack_set, pawn_left_capture_origin);
+    walk_single_direction_captures(origins, target_mask, pawn_right_attack_set, pawn_right_capture_origin);
+  };
+  const auto [pinned, unpinned] =
+      make_pinned_and_unpinned<side_to_move, PieceType::PAWN>(board, ~hv_pin_mask, dg_pin_mask);
+  walk_captures(unpinned, check_mask);
+  walk_captures(pinned, dg_pin_mask);
+}
+
+template <Color side_to_move>
+void walk_pawn_moves(const Node& node, const Bitboard check_mask, const Bitboard dg_pin_mask,
+                     const Bitboard hv_pin_mask, const auto& visit_single_push_or_capture,
+                     const std::invocable<const QuietMove&, Bitboard> auto& visit_double_push) {
+  walk_pawn_pushes<side_to_move>(node.board, check_mask, dg_pin_mask, hv_pin_mask, visit_single_push_or_capture,
+                                 visit_double_push);
+  walk_pawn_captures<side_to_move>(node.board, check_mask, dg_pin_mask, hv_pin_mask, visit_single_push_or_capture);
+}
+
 template <Color side_to_move, PieceType piece_type>
 void walk_piece_moves(const Board& board, const Bitboard origin_mask, const Bitboard check_mask,
                       const Bitboard pin_mask, const std::invocable<Square> auto& lookup_attack_set,
@@ -137,6 +232,13 @@ void walk_non_king_moves(const Node& node, const Square king_origin, const Bitbo
       make_pin_mask<context.side_to_move, PieceType::BISHOP>(node.board, king_origin, bishop_attack_set);
   const auto hv_pin_mask =
       make_pin_mask<context.side_to_move, PieceType::ROOK>(node.board, king_origin, rook_attack_set);
+  walk_pawn_moves<context.side_to_move>(
+      node, check_mask, dg_pin_mask, hv_pin_mask,
+      [&](const auto& move) { visitor.template visit_pawn_move<context.move()>(move); },
+      [&](const QuietMove& double_push, const Bitboard en_passant_target) {
+        visitor.template visit_pawn_move<context.move(Node::Context::Move::PAWN_DOUBLE_PUSH)>(double_push,
+                                                                                              en_passant_target);
+      });
   walk_piece_moves<context.side_to_move, PieceType::KNIGHT>(
       node.board, ~(dg_pin_mask | hv_pin_mask), check_mask, Bitboard(), knight_attack_set,
       [&](const auto& move) { visitor.template visit_knight_move<context.move()>(move); });
