@@ -36,6 +36,33 @@ constexpr Bitboard pawn_right_attack_set(const Color color, const Bitboard pawns
   }
 }
 
+constexpr Bitboard pawn_single_push_origin(const Color color, const Bitboard target) noexcept {
+  switch (color) {
+    case Color::WHITE:
+      return unsafe_shift(target, Direction::SOUTH);
+    case Color::BLACK:
+      return unsafe_shift(target, Direction::NORTH);
+  }
+}
+
+constexpr Bitboard pawn_left_capture_origin(const Color color, const Bitboard target) noexcept {
+  switch (color) {
+    case Color::WHITE:
+      return unsafe_shift(target, Direction::SOUTH_EAST);
+    case Color::BLACK:
+      return unsafe_shift(target, Direction::NORTH_WEST);
+  }
+}
+
+constexpr Bitboard pawn_right_capture_origin(const Color color, const Bitboard target) noexcept {
+  switch (color) {
+    case Color::WHITE:
+      return unsafe_shift(target, Direction::SOUTH_WEST);
+    case Color::BLACK:
+      return unsafe_shift(target, Direction::NORTH_EAST);
+  }
+}
+
 constexpr Bitboard knight_attack_set(const Square origin) noexcept {
   static constexpr auto attack_sets = [] consteval {
     EnumMap<Square, Bitboard> attack_sets{};
