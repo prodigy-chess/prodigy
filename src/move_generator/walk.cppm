@@ -2,6 +2,7 @@ module;
 
 #include <concepts>
 #include <initializer_list>
+#include <utility>
 
 export module prodigy.move_generator:walk;
 
@@ -23,8 +24,8 @@ constexpr PieceType capture_victim_at(const Board& board, const Bitboard target)
 }
 
 template <Color side_to_move, PieceType piece_type>
-constexpr void walk_quiet_moves_and_captures(const Board& board, const Bitboard origin, const Bitboard attack_set,
-                                             const auto& visit_move) {
+constexpr void walk_non_pawn_quiet_moves_and_captures(const Board& board, const Bitboard origin,
+                                                      const Bitboard attack_set, const auto& visit_move) {
   for_each_bit(attack_set & ~board.occupancy(), [&](const auto target) {
     visit_move(QuietMove{
         .origin = origin,
@@ -69,7 +70,7 @@ void walk_king_moves(const Board& board, const Square king_origin, const auto& v
                     [&](const auto origin) { king_danger_set |= rook_attack_set(origin, kingless_occupancy); });
     return king_danger_set;
   }();
-  walk_quiet_moves_and_captures<side_to_move, PieceType::KING>(
+  walk_non_pawn_quiet_moves_and_captures<side_to_move, PieceType::KING>(
       board, board[side_to_move, PieceType::KING], king_attack_set(king_origin) & ~king_danger_set, visit_move);
   walk_castle<side_to_move, castling_rights, PieceType::KING>(king_danger_set, visit_move);
   walk_castle<side_to_move, castling_rights, PieceType::QUEEN>(king_danger_set, visit_move);
@@ -103,21 +104,29 @@ Bitboard make_pin_mask(const Board& board, const Square king_origin,
 }
 
 template <Color side_to_move, PieceType piece_type>
+constexpr std::pair<Bitboard, Bitboard> make_pinned_and_unpinned(const Board& board, const Bitboard origin_mask,
+                                                                 const Bitboard pin_mask) noexcept {
+  const auto origins = board[side_to_move, piece_type] & origin_mask;
+  const auto pinned = origins & pin_mask;
+  return {pinned, origins ^ pinned};
+}
+
+template <Color side_to_move, PieceType piece_type>
 void walk_piece_moves(const Board& board, const Bitboard origin_mask, const Bitboard check_mask,
                       const Bitboard pin_mask, const std::invocable<Square> auto& lookup_attack_set,
                       const auto& visit_move) {
-  const auto walk_piece_moves = [&, origins = board[side_to_move, piece_type] & origin_mask](const auto origin_mask,
-                                                                                             const auto target_mask) {
-    for_each_bit_and_square(origins & origin_mask, [&](const auto origin_bit, const auto origin_square) {
-      walk_quiet_moves_and_captures<side_to_move, piece_type>(
+  const auto walk_moves = [&](const auto origins, const auto target_mask) {
+    for_each_bit_and_square(origins, [&](const auto origin_bit, const auto origin_square) {
+      walk_non_pawn_quiet_moves_and_captures<side_to_move, piece_type>(
           board, origin_bit, lookup_attack_set(origin_square) & target_mask, visit_move);
     });
   };
-  walk_piece_moves(~pin_mask, check_mask);
+  const auto [pinned, unpinned] = make_pinned_and_unpinned<side_to_move, piece_type>(board, origin_mask, pin_mask);
+  walk_moves(unpinned, check_mask);
   if constexpr (piece_type != PieceType::KNIGHT) {
     // FIXME: constexpr this
     if (check_mask == ~Bitboard()) {
-      walk_piece_moves(pin_mask, pin_mask);
+      walk_moves(pinned, pin_mask);
     }
   }
 }
