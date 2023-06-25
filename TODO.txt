@@ -12,3 +12,4 @@ Chess:
 - Magic bitboards: move implementation to .cpp
 - Node: try aligning to cache line size
 - walk: focus on captures if the singular checker is a knight or pawn (no need to visit quiet moves).
+- Node: save en passant victim instead of target
