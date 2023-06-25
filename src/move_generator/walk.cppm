@@ -95,8 +95,7 @@ template <Color side_to_move, PieceType piece_type>
 Bitboard make_pin_mask(const Board& board, const Square king_origin,
                        const std::invocable<Square, Bitboard> auto& lookup_attack_set) noexcept {
   const auto attack_set = lookup_attack_set(king_origin, board.occupancy());
-  const auto blockers = attack_set & board[side_to_move];
-  const auto pinners = (lookup_attack_set(king_origin, board.occupancy() ^ blockers) ^ attack_set) &
+  const auto pinners = lookup_attack_set(king_origin, board.occupancy() & ~attack_set) &
                        (board[!side_to_move, piece_type] | board[!side_to_move, PieceType::QUEEN]);
   Bitboard pin_mask{};
   for_each_square(pinners, [&](const auto origin) { pin_mask |= half_open_segment(origin, king_origin); });
