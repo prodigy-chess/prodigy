@@ -59,7 +59,7 @@ class MagicBitboards {
         return std::ranges::all_of(masked_occupancy_to_attack_set, [&](const auto& masked_occupancy_and_attack_set) {
           const auto& [masked_occupancy, attack_set] = masked_occupancy_and_attack_set;
           const auto entry = std::exchange(segment[index(masked_occupancy, occupancy_mask, magic, shift)], attack_set);
-          return !any(entry) || entry == attack_set;
+          return empty(entry) || entry == attack_set;
         });
       };
       const auto magic = [&] {
