@@ -145,6 +145,25 @@ TEST_CASE("walk") {
           },
       },
       {
+          "6k1/8/8/8/8/8/8/4K1NR w K - 0 1",
+          "can't kingside castle though occupied king target",
+          {
+              .knight_quiet_moves = 3,
+              .rook_quiet_moves = 7,
+              .king_quiet_moves = 5,
+          },
+      },
+      {
+          "6k1/8/8/8/8/8/8/4Kn1R w K - 0 1",
+          "can't kingside castle though occupied rook target",
+          {
+              .rook_quiet_moves = 8,
+              .rook_captures = 1,
+              .king_quiet_moves = 3,
+              .king_captures = 1,
+          },
+      },
+      {
           "6k1/8/8/8/4r3/8/8/4K2R w K - 0 1",
           "can't kingside castle out of check",
           {
@@ -181,6 +200,33 @@ TEST_CASE("walk") {
           "kingside castle requires castling rights",
           {
               .rook_quiet_moves = 9,
+              .king_quiet_moves = 5,
+          },
+      },
+      {
+          "7k/8/8/8/8/8/8/R1n1K3 w Q - 0 1",
+          "can't queenside castle though occupied king target",
+          {
+              .rook_quiet_moves = 8,
+              .rook_captures = 1,
+              .king_quiet_moves = 4,
+          },
+      },
+      {
+          "7k/8/8/8/8/8/8/R2NK3 w Q - 0 1",
+          "can't queenside castle though occupied rook target",
+          {
+              .knight_quiet_moves = 4,
+              .rook_quiet_moves = 9,
+              .king_quiet_moves = 4,
+          },
+      },
+      {
+          "7k/8/8/8/8/8/8/RN2K3 w Q - 0 1",
+          "can't queenside castle though occupied rook path",
+          {
+              .knight_quiet_moves = 3,
+              .rook_quiet_moves = 7,
               .king_quiet_moves = 5,
           },
       },

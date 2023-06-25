@@ -46,10 +46,13 @@ constexpr void walk_non_pawn_quiet_moves_and_captures(const Board& board, const 
 }
 
 template <Color side_to_move, CastlingRights castling_rights, PieceType side>
-constexpr void walk_castle(const Bitboard king_danger_set, const auto& visit_move) {
+constexpr void walk_castle(const Board& board, const Bitboard king_danger_set, const auto& visit_move) {
   if constexpr (using CastlingTraits = ColorTraits<side_to_move>::template CastlingTraits<side>;
                 any(castling_rights & CastlingTraits::CASTLING_RIGHTS)) {
-    if (static constexpr auto& castle = CastlingTraits::CASTLE;
+    static constexpr auto& castle = CastlingTraits::CASTLE;
+    if (static constexpr auto rook_path =
+            half_open_segment(square_of(castle.rook_target), square_of(castle.rook_origin));
+        !any(board.occupancy() & rook_path) &&
         !any(king_danger_set & (castle.king_origin | castle.rook_target | castle.king_target))) {
       visit_move(castle);
     }
@@ -72,8 +75,8 @@ void walk_king_moves(const Board& board, const Square king_origin, const auto& v
   }();
   walk_non_pawn_quiet_moves_and_captures<side_to_move, PieceType::KING>(
       board, board[side_to_move, PieceType::KING], king_attack_set(king_origin) & ~king_danger_set, visit_move);
-  walk_castle<side_to_move, castling_rights, PieceType::KING>(king_danger_set, visit_move);
-  walk_castle<side_to_move, castling_rights, PieceType::QUEEN>(king_danger_set, visit_move);
+  walk_castle<side_to_move, castling_rights, PieceType::KING>(board, king_danger_set, visit_move);
+  walk_castle<side_to_move, castling_rights, PieceType::QUEEN>(board, king_danger_set, visit_move);
 }
 
 template <Color side_to_move>
