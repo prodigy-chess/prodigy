@@ -161,7 +161,40 @@ constexpr void walk_pawn_pushes(const Board& board, const Bitboard check_mask, c
   }
 }
 
-template <Color side_to_move, bool>
+template <Color side_to_move>
+void walk_en_passant_captures(const Node& node, const Bitboard check_mask, const Bitboard dg_pin_mask,
+                              const Bitboard dg_pinned, const Bitboard unpinned,
+                              const std::invocable<const EnPassantCapture&> auto& visit_move) {
+  const auto walk_single_direction_en_passant_capture = [&](const auto origins, const auto& lookup_attack_set) {
+    if (const auto origin = origins & lookup_attack_set(!side_to_move, node.en_passant_target); any(origin)) {
+      // FIXME: optimize (only compute once?, pass in king_origin?)
+      if (const auto victim_origin = pawn_single_push_set(!side_to_move, node.en_passant_target);
+          !any(rook_attack_set(square_of(node.board[side_to_move, PieceType::KING]),
+                               node.board.occupancy() ^ origin ^ node.en_passant_target ^ victim_origin) &
+               (node.board[!side_to_move, PieceType::ROOK] | node.board[!side_to_move, PieceType::QUEEN]))) {
+        visit_move(EnPassantCapture{
+            .origin = origin,
+            .target = node.en_passant_target,
+            .victim_origin = victim_origin,
+            .side_to_move = side_to_move,
+        });
+      }
+    }
+  };
+  const auto walk_en_passant_captures = [&](const auto origins) {
+    walk_single_direction_en_passant_capture(origins, pawn_left_attack_set);
+    walk_single_direction_en_passant_capture(origins, pawn_right_attack_set);
+  };
+  walk_en_passant_captures(unpinned);
+  // FIXME: constexpr this
+  if (check_mask == ~Bitboard()) {
+    if (any(dg_pin_mask & node.en_passant_target)) {
+      walk_en_passant_captures(dg_pinned);
+    }
+  }
+}
+
+template <Color side_to_move, bool has_en_passant_target>
 constexpr void walk_pawn_captures(const Node& node, const Bitboard check_mask, const Bitboard dg_pin_mask,
                                   const Bitboard hv_pin_mask, const auto& visit_move) {
   const auto walk_single_direction_captures = [&](const auto origins, const auto target_mask,
@@ -199,6 +232,9 @@ constexpr void walk_pawn_captures(const Node& node, const Bitboard check_mask, c
   // FIXME: constexpr this
   if (check_mask == ~Bitboard()) {
     walk_captures(pinned, dg_pin_mask);
+  }
+  if constexpr (has_en_passant_target) {
+    walk_en_passant_captures<side_to_move>(node, check_mask, dg_pin_mask, pinned, unpinned, visit_move);
   }
 }
 

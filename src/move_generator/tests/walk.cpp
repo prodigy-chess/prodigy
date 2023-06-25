@@ -381,6 +381,78 @@ TEST_CASE("walk") {
               .king_quiet_moves = 5,
           },
       },
+      {
+          "r6k/8/8/pP5P/1P6/8/8/K7 w - a6 0 1",
+          "unpinned single en passant capture on edge",
+          {
+              .pawn_single_pushes = 2,
+              .pawn_captures = 1,
+              .en_passant_captures = 1,
+              .king_quiet_moves = 3,
+          },
+      },
+      {
+          "7k/8/8/qb1Pp2K/8/8/8/8 w - e6 0 1",
+          "unpinned single en passant capture in middle",
+          {
+              .pawn_single_pushes = 1,
+              .en_passant_captures = 1,
+              .king_quiet_moves = 5,
+          },
+      },
+      {
+          "7k/8/8/qPpP3K/1P6/8/8/8 w - c6 0 1",
+          "unpinned double en passant capture",
+          {
+              .pawn_single_pushes = 2,
+              .pawn_captures = 2,
+              .en_passant_captures = 2,
+              .king_quiet_moves = 5,
+          },
+      },
+      {
+          "1q5k/8/8/3pP3/8/8/7K/8 w - d6 0 1",
+          "en passant capture on pin mask",
+          {
+              .en_passant_captures = 1,
+              .king_quiet_moves = 5,
+          },
+      },
+      {
+          "7k/6q1/8/2PpP3/8/8/1K6/8 w - d6 0 1",
+          "en passant capture not on dg pin mask",
+          {
+              .pawn_single_pushes = 1,
+              .en_passant_captures = 1,
+              .king_quiet_moves = 8,
+          },
+      },
+      {
+          "2r4k/8/8/2PpP3/2K5/8/8/8 w - d6 0 1",
+          "en passant capture not on hv pin mask",
+          {
+              .en_passant_captures = 1,
+              .king_quiet_moves = 6,
+              .king_captures = 1,
+          },
+      },
+      {
+          "7k/8/8/3pP3/4K3/8/8/8 w - d6 0 1",
+          "en passant capture check evasion",
+          {
+              .en_passant_captures = 1,
+              .king_quiet_moves = 6,
+              .king_captures = 1,
+          },
+      },
+      {
+          "7k/8/8/bq1Pp2K/8/8/8/8 w - e6 0 1",
+          "en passant capture can't discover check",
+          {
+              .pawn_single_pushes = 1,
+              .king_quiet_moves = 5,
+          },
+      },
   }));
   static_cast<void>(init());
   INFO(fen);
