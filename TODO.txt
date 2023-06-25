@@ -14,6 +14,5 @@ Chess:
 - walk: focus on captures if the singular checker is a knight or pawn (no need to visit quiet moves).
 - Node: save en passant victim instead of target
 - core: print bitboard and ply
-- core: add `empty`
 - move_generator: consider calling `init` from a global self-invoking lambda
 - perft: accept Position instead of FEN

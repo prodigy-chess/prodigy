@@ -12,10 +12,10 @@ using namespace magic_enum;
 TEST_CASE("any") {
   static constexpr Board board;
   enum_for_each<Color>([](const auto color) {
-    enum_for_each<PieceType>([&](const auto piece_type) { STATIC_REQUIRE_FALSE(any(board[color, piece_type])); });
-    STATIC_REQUIRE_FALSE(any(board[color]));
+    enum_for_each<PieceType>([&](const auto piece_type) { STATIC_REQUIRE(empty(board[color, piece_type])); });
+    STATIC_REQUIRE(empty(board[color]));
   });
-  STATIC_REQUIRE_FALSE(any(board.occupancy()));
+  STATIC_REQUIRE(empty(board.occupancy()));
 }
 
 TEST_CASE("starting board") {

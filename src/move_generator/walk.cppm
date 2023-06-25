@@ -52,8 +52,8 @@ constexpr void walk_castle(const Board& board, const Bitboard king_danger_set, c
     static constexpr auto& castle = CastlingTraits::CASTLE;
     if (static constexpr auto rook_path =
             half_open_segment(square_of(castle.rook_target), square_of(castle.rook_origin));
-        !any(board.occupancy() & rook_path) &&
-        !any(king_danger_set & (castle.king_origin | castle.rook_target | castle.king_target))) {
+        empty(board.occupancy() & rook_path) &&
+        empty(king_danger_set & (castle.king_origin | castle.rook_target | castle.king_target))) {
       visit_move(castle);
     }
   }
@@ -81,7 +81,7 @@ void walk_king_moves(const Board& board, const Square king_origin, const auto& v
 
 template <Color side_to_move>
 Bitboard make_checkers(const Board& board, const Square king_origin) noexcept {
-  // FIXME: try short circuiting using !any(king_danger_set & board[side_to_move, PieceType::KING])
+  // FIXME: try short circuiting using empty(king_danger_set & board[side_to_move, PieceType::KING])
   auto checkers = (pawn_left_attack_set(side_to_move, board[side_to_move, PieceType::KING]) |
                    pawn_right_attack_set(side_to_move, board[side_to_move, PieceType::KING])) &
                   board[!side_to_move, PieceType::PAWN];
@@ -172,9 +172,9 @@ void walk_en_passant_captures(const Node& node, const Bitboard check_mask, const
     if (const auto origin = origins & lookup_attack_set(!side_to_move, node.en_passant_target); any(origin)) {
       // FIXME: optimize (only compute once?, pass in king_origin?)
       if (const auto victim_origin = pawn_single_push_set(!side_to_move, node.en_passant_target);
-          !any(rook_attack_set(square_of(node.board[side_to_move, PieceType::KING]),
-                               node.board.occupancy() ^ origin ^ node.en_passant_target ^ victim_origin) &
-               (node.board[!side_to_move, PieceType::ROOK] | node.board[!side_to_move, PieceType::QUEEN]))) {
+          empty(rook_attack_set(square_of(node.board[side_to_move, PieceType::KING]),
+                                node.board.occupancy() ^ origin ^ node.en_passant_target ^ victim_origin) &
+                (node.board[!side_to_move, PieceType::ROOK] | node.board[!side_to_move, PieceType::QUEEN]))) {
         visit_move(EnPassantCapture{
             .origin = origin,
             .target = node.en_passant_target,
