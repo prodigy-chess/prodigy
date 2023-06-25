@@ -70,15 +70,11 @@ class Visitor : public move_generator::Visitor<Visitor<depth>> {
 };
 }  // namespace
 
-std::expected<std::uint64_t, std::string_view> run(const std::string_view fen, const Ply depth) {
-  const auto position = parse_fen(fen);
-  if (!position.has_value()) {
-    return std::unexpected(position.error());
-  }
+std::expected<std::uint64_t, std::string_view> run(const Position& position, const Ply depth) {
   switch (std::to_underlying(depth)) {
 #define _(DEPTH)                                                           \
   case DEPTH:                                                              \
-    return dispatch(*position, []<auto context>(auto node) {               \
+    return dispatch(position, []<auto context>(auto node) {                \
       std::uint64_t leaf_node_count = 0;                                   \
       walk<context>(node, Visitor<Ply{DEPTH - 1}>(node, leaf_node_count)); \
       return leaf_node_count;                                              \
