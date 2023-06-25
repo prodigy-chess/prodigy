@@ -15,6 +15,7 @@ struct MoveCounts {
   std::uint64_t pawn_captures;
   std::uint64_t quiet_promotions;
   std::uint64_t capture_promotions;
+  std::uint64_t en_passant_captures;
   std::uint64_t knight_quiet_moves;
   std::uint64_t knight_captures;
   std::uint64_t bishop_quiet_moves;
@@ -58,6 +59,11 @@ class Visitor : public move_generator::Visitor<Visitor> {
   template <Node::Context>
   constexpr void visit_pawn_move(const CapturePromotion&) const noexcept {
     ++move_counts_.capture_promotions;
+  }
+
+  template <Node::Context>
+  constexpr void visit_pawn_move(const EnPassantCapture&) const noexcept {
+    ++move_counts_.en_passant_captures;
   }
 
   template <Node::Context>
