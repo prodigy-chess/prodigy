@@ -155,15 +155,18 @@ constexpr void walk_pawn_pushes(const Board& board, const Bitboard check_mask, c
   const auto [pinned, unpinned] =
       make_pinned_and_unpinned<side_to_move, PieceType::PAWN>(board, ~dg_pin_mask, hv_pin_mask);
   walk_pushes(unpinned, check_mask);
-  walk_pushes(pinned, hv_pin_mask);
+  // FIXME: constexpr this
+  if (check_mask == ~Bitboard()) {
+    walk_pushes(pinned, hv_pin_mask);
+  }
 }
 
-template <Color side_to_move>
-constexpr void walk_pawn_captures(const Board& board, const Bitboard check_mask, const Bitboard dg_pin_mask,
+template <Color side_to_move, bool>
+constexpr void walk_pawn_captures(const Node& node, const Bitboard check_mask, const Bitboard dg_pin_mask,
                                   const Bitboard hv_pin_mask, const auto& visit_move) {
   const auto walk_single_direction_captures = [&](const auto origins, const auto target_mask,
                                                   const auto& lookup_attack_set, const auto& origin_of) {
-    const auto targets = lookup_attack_set(side_to_move, origins) & board[!side_to_move] & target_mask;
+    const auto targets = lookup_attack_set(side_to_move, origins) & node.board[!side_to_move] & target_mask;
     const auto promotion_targets = targets & ColorTraits<side_to_move>::PROMOTION_RANK;
     for_each_bit(promotion_targets, [&](const auto target) {
       for (const auto promotion : {PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK, PieceType::QUEEN}) {
@@ -172,7 +175,7 @@ constexpr void walk_pawn_captures(const Board& board, const Bitboard check_mask,
             .target = target,
             .side_to_move = side_to_move,
             .promotion = promotion,
-            .victim = capture_victim_at<side_to_move>(board, target),
+            .victim = capture_victim_at<side_to_move>(node.board, target),
         });
       }
     });
@@ -182,7 +185,7 @@ constexpr void walk_pawn_captures(const Board& board, const Bitboard check_mask,
           .target = target,
           .side_to_move = side_to_move,
           .aggressor = PieceType::PAWN,
-          .victim = capture_victim_at<side_to_move>(board, target),
+          .victim = capture_victim_at<side_to_move>(node.board, target),
       });
     });
   };
@@ -191,18 +194,22 @@ constexpr void walk_pawn_captures(const Board& board, const Bitboard check_mask,
     walk_single_direction_captures(origins, target_mask, pawn_right_attack_set, pawn_right_capture_origin);
   };
   const auto [pinned, unpinned] =
-      make_pinned_and_unpinned<side_to_move, PieceType::PAWN>(board, ~hv_pin_mask, dg_pin_mask);
+      make_pinned_and_unpinned<side_to_move, PieceType::PAWN>(node.board, ~hv_pin_mask, dg_pin_mask);
   walk_captures(unpinned, check_mask);
-  walk_captures(pinned, dg_pin_mask);
+  // FIXME: constexpr this
+  if (check_mask == ~Bitboard()) {
+    walk_captures(pinned, dg_pin_mask);
+  }
 }
 
-template <Color side_to_move>
+template <Color side_to_move, bool has_en_passant_target>
 void walk_pawn_moves(const Node& node, const Bitboard check_mask, const Bitboard dg_pin_mask,
                      const Bitboard hv_pin_mask, const auto& visit_single_push_or_capture,
                      const std::invocable<const QuietMove&, Bitboard> auto& visit_double_push) {
   walk_pawn_pushes<side_to_move>(node.board, check_mask, dg_pin_mask, hv_pin_mask, visit_single_push_or_capture,
                                  visit_double_push);
-  walk_pawn_captures<side_to_move>(node.board, check_mask, dg_pin_mask, hv_pin_mask, visit_single_push_or_capture);
+  walk_pawn_captures<side_to_move, has_en_passant_target>(node, check_mask, dg_pin_mask, hv_pin_mask,
+                                                          visit_single_push_or_capture);
 }
 
 template <Color side_to_move, PieceType piece_type>
@@ -231,7 +238,7 @@ void walk_non_king_moves(const Node& node, const Square king_origin, const Bitbo
       make_pin_mask<context.side_to_move, PieceType::BISHOP>(node.board, king_origin, bishop_attack_set);
   const auto hv_pin_mask =
       make_pin_mask<context.side_to_move, PieceType::ROOK>(node.board, king_origin, rook_attack_set);
-  walk_pawn_moves<context.side_to_move>(
+  walk_pawn_moves<context.side_to_move, context.has_en_passant_target>(
       node, check_mask, dg_pin_mask, hv_pin_mask,
       [&](const auto& move) { visitor.template visit_pawn_move<context.move()>(move); },
       [&](const QuietMove& double_push, const Bitboard en_passant_target) {
