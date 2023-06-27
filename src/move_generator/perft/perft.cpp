@@ -70,7 +70,7 @@ class Visitor : public move_generator::Visitor<Visitor<depth>> {
 };
 }  // namespace
 
-std::expected<std::uint64_t, std::string_view> run(const Position& position, const Ply depth) {
+std::expected<std::uint64_t, std::string_view> perft(const Position& position, const Ply depth) {
   switch (std::to_underlying(depth)) {
 #define _(DEPTH)                                                           \
   case DEPTH:                                                              \

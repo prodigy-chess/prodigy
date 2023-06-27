@@ -1,6 +1,5 @@
 module;
 
-#include <concepts>
 #include <utility>
 
 export module prodigy.move_generator:visitor;
@@ -49,10 +48,11 @@ class Visitor {
   }
 
  private:
-  template <std::invocable<> Undo>
+  template <typename Move>
   class AutoUndo {
    public:
-    constexpr explicit AutoUndo(Undo&& undo) noexcept : undo_(std::forward<Undo>(undo)) { std::forward<Undo>(undo_)(); }
+    constexpr explicit AutoUndo(Node& node, const Move& move, const Bitboard en_passant_target) noexcept
+        : node_(node), move_(move), en_passant_target_(en_passant_target) {}
 
     AutoUndo(const AutoUndo&) = delete;
     AutoUndo& operator=(const AutoUndo&) = delete;
@@ -60,23 +60,22 @@ class Visitor {
     AutoUndo(AutoUndo&&) = delete;
     AutoUndo& operator=(AutoUndo&&) = delete;
 
-    constexpr ~AutoUndo() { std::forward<Undo>(undo_)(); }
+    constexpr ~AutoUndo() {
+      node_.board.apply(move_);
+      node_.en_passant_target = en_passant_target_;
+    }
 
    private:
-    Undo undo_;
+    Node& node_;
+    const Move& move_;
+    Bitboard en_passant_target_;
   };
-
-  template <std::invocable<> Undo>
-  explicit AutoUndo(Undo&&) -> AutoUndo<Undo>;
 
  protected:
   template <typename Move>
-  static constexpr auto scoped_move(Node& node, const Move& move,
-                                    const Bitboard en_passant_target = Bitboard()) noexcept {
-    return AutoUndo([&] {
-      node.board.apply(move);
-      node.en_passant_target ^= en_passant_target;
-    });
+  static constexpr AutoUndo<Move> scoped_move(Node& node, const Move& move, const Bitboard en_passant_target) noexcept {
+    node.board.apply(move);
+    return AutoUndo<Move>(node, move, std::exchange(node.en_passant_target, en_passant_target));
   }
 };
 }  // namespace prodigy::move_generator
