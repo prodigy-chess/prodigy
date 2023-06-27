@@ -63,7 +63,8 @@ template <Color side_to_move, CastlingRights castling_rights>
 void walk_king_moves(const Board& board, const Square king_origin, const auto& visit_move) {
   const auto king_danger_set = [&] {
     auto king_danger_set = pawn_left_attack_set(!side_to_move, board[!side_to_move, PieceType::PAWN]) |
-                           pawn_right_attack_set(!side_to_move, board[!side_to_move, PieceType::PAWN]);
+                           pawn_right_attack_set(!side_to_move, board[!side_to_move, PieceType::PAWN]) |
+                           king_attack_set(square_of(board[!side_to_move, PieceType::KING]));
     for_each_square(board[!side_to_move, PieceType::KNIGHT],
                     [&](const auto origin) { king_danger_set |= knight_attack_set(origin); });
     const auto kingless_occupancy = board.occupancy() ^ board[side_to_move, PieceType::KING];
@@ -90,7 +91,6 @@ Bitboard make_checkers(const Board& board, const Square king_origin) noexcept {
               (board[!side_to_move, PieceType::BISHOP] | board[!side_to_move, PieceType::QUEEN]);
   checkers |= rook_attack_set(king_origin, board.occupancy()) &
               (board[!side_to_move, PieceType::ROOK] | board[!side_to_move, PieceType::QUEEN]);
-  checkers |= king_attack_set(king_origin) & board[!side_to_move, PieceType::KING];
   return checkers;
 }
 
