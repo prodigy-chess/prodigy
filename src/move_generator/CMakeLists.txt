@@ -1,4 +1,4 @@
-add_library(move_generator move_generator.cpp)
+add_library(move_generator magic_bitboards.cpp move_generator.cpp)
 target_sources(
   move_generator
   PRIVATE FILE_SET

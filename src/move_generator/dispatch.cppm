@@ -9,8 +9,7 @@ import prodigy.core;
 import :node;
 
 export namespace prodigy::move_generator {
-template <typename Callback>
-constexpr decltype(auto) dispatch(const Position& position, Callback&& callback) {
+constexpr decltype(auto) dispatch(const Position& position, auto&& callback) {
 #define HANDLE(value, ...) std::forward<decltype(callback)>(callback).template operator()<value>(__VA_ARGS__)
   const auto dispatch_side_to_move = [&](auto&& callback) -> decltype(auto) {
     switch (position.side_to_move) {
@@ -50,9 +49,9 @@ constexpr decltype(auto) dispatch(const Position& position, Callback&& callback)
     return position.en_passant_target.has_value() ? HANDLE(true, to_bitboard(*position.en_passant_target))
                                                   : HANDLE(false, Bitboard());
   };
-  return dispatch_side_to_move([&]<auto side_to_move>->decltype(auto) {
-    return dispatch_castling_rights([&]<auto castling_rights>->decltype(auto) {
-      return dispatch_en_passant_target([&]<auto has_en_passant_target>(const auto en_passant_target)->decltype(auto) {
+  return dispatch_side_to_move([&]<auto side_to_move> -> decltype(auto) {
+    return dispatch_castling_rights([&]<auto castling_rights> -> decltype(auto) {
+      return dispatch_en_passant_target([&]<auto has_en_passant_target>(const auto en_passant_target) -> decltype(auto) {
         return HANDLE((Node::Context{side_to_move, castling_rights, has_en_passant_target}),
                       Node{position.board, en_passant_target});
       });
