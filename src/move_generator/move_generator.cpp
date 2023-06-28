@@ -6,8 +6,6 @@ module;
 
 module prodigy.move_generator;
 
-import :magic_bitboards;
-
 namespace prodigy::move_generator {
 std::expected<void, std::string_view> init() noexcept {
   if (static bool initialized = false; std::exchange(initialized, true)) {
