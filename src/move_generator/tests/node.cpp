@@ -1,91 +1,88 @@
 #include <catch2/catch_test_macros.hpp>
-#include <magic_enum_utility.hpp>
-#include <utility>
 
 import prodigy.core;
 import prodigy.move_generator;
 
 namespace prodigy::move_generator {
 namespace {
-TEST_CASE("move") {
-  static constexpr auto validate = [](auto&& validate) {
-    std::forward<decltype(validate)>(validate)
-        .template operator()<Node::Context{
-            .side_to_move = Color::WHITE,
-            .castling_rights = CastlingRights::WHITE_KINGSIDE | CastlingRights::WHITE_QUEENSIDE |
-                               CastlingRights::BLACK_KINGSIDE | CastlingRights::BLACK_QUEENSIDE,
-            .has_en_passant_target = false,
-        }>();
-    std::forward<decltype(validate)>(validate)
-        .template operator()<Node::Context{
-            .side_to_move = Color::BLACK,
-            .castling_rights = CastlingRights::WHITE_KINGSIDE | CastlingRights::WHITE_QUEENSIDE |
-                               CastlingRights::BLACK_KINGSIDE | CastlingRights::BLACK_QUEENSIDE,
-            .has_en_passant_target = true,
-        }>();
+void validate(const auto& validate) {
+  static constexpr auto castling_rights = CastlingRights::WHITE_KINGSIDE | CastlingRights::WHITE_QUEENSIDE |
+                                          CastlingRights::BLACK_KINGSIDE | CastlingRights::BLACK_QUEENSIDE;
+  static constexpr auto white_context = Node::Context{
+      .side_to_move = Color::WHITE,
+      .castling_rights = castling_rights,
+      .has_en_passant_target = false,
   };
-  magic_enum::enum_for_each<Node::Context::Move>([](const auto move) {
-    switch (move) {
-      case Node::Context::Move::PAWN_DOUBLE_PUSH:
-        validate([]<auto node_context> {
-          STATIC_REQUIRE(node_context.move(Node::Context::Move::PAWN_DOUBLE_PUSH) ==
-                         Node::Context{
-                             .side_to_move = !node_context.side_to_move,
-                             .castling_rights = node_context.castling_rights,
-                             .has_en_passant_target = true,
-                         });
-        });
-        break;
-      case Node::Context::Move::KINGSIDE_ROOK_MOVE:
-        validate([]<auto node_context> {
-          STATIC_REQUIRE(node_context.move(Node::Context::Move::KINGSIDE_ROOK_MOVE) ==
-                         Node::Context{
-                             .side_to_move = !node_context.side_to_move,
-                             .castling_rights = node_context.side_to_move == Color::WHITE
-                                                    ? node_context.castling_rights & ~CastlingRights::WHITE_KINGSIDE
-                                                    : node_context.castling_rights & ~CastlingRights::BLACK_KINGSIDE,
-                             .has_en_passant_target = false,
-                         });
-        });
-        break;
-      case Node::Context::Move::QUEENSIDE_ROOK_MOVE:
-        validate([]<auto node_context> {
-          STATIC_REQUIRE(node_context.move(Node::Context::Move::QUEENSIDE_ROOK_MOVE) ==
-                         Node::Context{
-                             .side_to_move = !node_context.side_to_move,
-                             .castling_rights = node_context.side_to_move == Color::WHITE
-                                                    ? node_context.castling_rights & ~CastlingRights::WHITE_QUEENSIDE
-                                                    : node_context.castling_rights & ~CastlingRights::BLACK_QUEENSIDE,
-                             .has_en_passant_target = false,
-                         });
-        });
-        break;
-      case Node::Context::Move::KING_MOVE:
-        validate([]<auto node_context> {
-          STATIC_REQUIRE(node_context.move(Node::Context::Move::KING_MOVE) ==
-                         Node::Context{
-                             .side_to_move = !node_context.side_to_move,
-                             .castling_rights = node_context.side_to_move == Color::WHITE
-                                                    ? node_context.castling_rights & ~(CastlingRights::WHITE_KINGSIDE |
-                                                                                       CastlingRights::WHITE_QUEENSIDE)
-                                                    : node_context.castling_rights & ~(CastlingRights::BLACK_KINGSIDE |
-                                                                                       CastlingRights::BLACK_QUEENSIDE),
-                             .has_en_passant_target = false,
-                         });
-        });
-        break;
-      case Node::Context::Move::OTHER:
-        validate([]<auto node_context> {
-          STATIC_REQUIRE(node_context.move(Node::Context::Move::OTHER) ==
-                         Node::Context{
-                             .side_to_move = !node_context.side_to_move,
-                             .castling_rights = node_context.castling_rights,
-                             .has_en_passant_target = false,
-                         });
-          STATIC_REQUIRE(node_context.move(Node::Context::Move::OTHER) == node_context.move());
-        });
-        break;
-    }
+  static constexpr auto black_context = Node::Context{
+      .side_to_move = Color::BLACK,
+      .castling_rights = castling_rights,
+      .has_en_passant_target = true,
+  };
+  validate.template operator()<white_context, castling_rights>();
+  validate.template operator()<white_context, castling_rights & ~CastlingRights::BLACK_KINGSIDE>();
+  validate.template operator()<white_context, castling_rights & ~CastlingRights::BLACK_QUEENSIDE>();
+  validate.template operator()<black_context, castling_rights>();
+  validate.template operator()<black_context, castling_rights & ~CastlingRights::WHITE_KINGSIDE>();
+  validate.template operator()<black_context, castling_rights & ~CastlingRights::WHITE_QUEENSIDE>();
+}
+
+TEST_CASE("pawn_double_push") {
+  validate([]<auto context, auto> {
+    STATIC_REQUIRE(context.pawn_double_push() == Node::Context{
+                                                     .side_to_move = !context.side_to_move,
+                                                     .castling_rights = context.castling_rights,
+                                                     .has_en_passant_target = true,
+                                                 });
+  });
+}
+
+TEST_CASE("kingside_rook_move") {
+  validate([]<auto context, auto castling_rights> {
+    STATIC_REQUIRE(context.kingside_rook_move(castling_rights) ==
+                   Node::Context{
+                       .side_to_move = !context.side_to_move,
+                       .castling_rights = context.side_to_move == Color::WHITE
+                                              ? castling_rights & ~CastlingRights::WHITE_KINGSIDE
+                                              : castling_rights & ~CastlingRights::BLACK_KINGSIDE,
+                       .has_en_passant_target = false,
+                   });
+  });
+}
+
+TEST_CASE("queenside_rook_move") {
+  validate([]<auto context, auto castling_rights> {
+    STATIC_REQUIRE(context.queenside_rook_move(castling_rights) ==
+                   Node::Context{
+                       .side_to_move = !context.side_to_move,
+                       .castling_rights = context.side_to_move == Color::WHITE
+                                              ? castling_rights & ~CastlingRights::WHITE_QUEENSIDE
+                                              : castling_rights & ~CastlingRights::BLACK_QUEENSIDE,
+                       .has_en_passant_target = false,
+                   });
+  });
+}
+
+TEST_CASE("king_move") {
+  validate([]<auto context, auto castling_rights> {
+    STATIC_REQUIRE(context.king_move(castling_rights) ==
+                   Node::Context{
+                       .side_to_move = !context.side_to_move,
+                       .castling_rights =
+                           context.side_to_move == Color::WHITE
+                               ? castling_rights & ~(CastlingRights::WHITE_KINGSIDE | CastlingRights::WHITE_QUEENSIDE)
+                               : castling_rights & ~(CastlingRights::BLACK_KINGSIDE | CastlingRights::BLACK_QUEENSIDE),
+                       .has_en_passant_target = false,
+                   });
+  });
+}
+
+TEST_CASE("move") {
+  validate([]<auto context, auto castling_rights> {
+    STATIC_REQUIRE(context.move(castling_rights) == Node::Context{
+                                                        .side_to_move = !context.side_to_move,
+                                                        .castling_rights = castling_rights,
+                                                        .has_en_passant_target = false,
+                                                    });
   });
 }
 }  // namespace
