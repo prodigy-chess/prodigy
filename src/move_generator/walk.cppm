@@ -14,35 +14,59 @@ import :visitor;
 
 namespace prodigy::move_generator {
 template <Color side_to_move>
-constexpr PieceType capture_victim_at(const Board& board, const Bitboard target) noexcept {
-  for (const auto piece_type : {PieceType::PAWN, PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK}) {
-    if (any(board[!side_to_move, piece_type] & target)) {
-      return piece_type;
+constexpr void for_each_capture(const Board& board, const Bitboard targets,
+                                const std::invocable<Bitboard, PieceType> auto& callback) {
+  for_each_bit(targets, [&](const auto target) {
+    for (const auto piece_type : {PieceType::PAWN, PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK}) {
+      if (any(board[!side_to_move, piece_type] & target)) {
+        callback(target, piece_type);
+        return;
+      }
     }
-  }
-  return PieceType::QUEEN;
+    callback(target, PieceType::QUEEN);
+  });
 }
 
-template <Color side_to_move, PieceType piece_type>
+template <Color side_to_move, CastlingRights castling_rights>
+constexpr void for_each_capture(const Board& board, Bitboard targets, const auto& callback) {
+#define _(SIDE)                                                                                                   \
+  if constexpr (using CastlingTraits = ColorTraits<!side_to_move>::template CastlingTraits<SIDE>;                 \
+                any(castling_rights & CastlingTraits::CASTLING_RIGHTS)) {                                         \
+    if (const auto target = board[!side_to_move, PieceType::ROOK] & targets & CastlingTraits::CASTLE.rook_origin; \
+        any(target)) {                                                                                            \
+      callback.template operator()<castling_rights & ~CastlingTraits::CASTLING_RIGHTS>(target, PieceType::ROOK);  \
+      targets ^= target;                                                                                          \
+    }                                                                                                             \
+  }
+  _(PieceType::KING)
+  _(PieceType::QUEEN)
+#undef _
+  for_each_capture<side_to_move>(board, targets, [&](const auto target, const auto victim) {
+    callback.template operator()<castling_rights>(target, victim);
+  });
+}
+
+template <Color side_to_move, CastlingRights castling_rights, PieceType piece_type>
 constexpr void walk_non_pawn_quiet_moves_and_captures(const Board& board, const Bitboard origin,
                                                       const Bitboard attack_set, const auto& visit_move) {
   for_each_bit(attack_set & ~board.occupancy(), [&](const auto target) {
-    visit_move(QuietMove{
+    visit_move.template operator()<castling_rights>(QuietMove{
         .origin = origin,
         .target = target,
         .side_to_move = side_to_move,
         .piece_type = piece_type,
     });
   });
-  for_each_bit(attack_set & board[!side_to_move], [&](const auto target) {
-    visit_move(Capture{
-        .origin = origin,
-        .target = target,
-        .side_to_move = side_to_move,
-        .aggressor = piece_type,
-        .victim = capture_victim_at<side_to_move>(board, target),
-    });
-  });
+  for_each_capture<side_to_move, castling_rights>(
+      board, attack_set & board[!side_to_move], [&]<auto new_castling_rights>(const auto target, const auto victim) {
+        visit_move.template operator()<new_castling_rights>(Capture{
+            .origin = origin,
+            .target = target,
+            .side_to_move = side_to_move,
+            .aggressor = piece_type,
+            .victim = victim,
+        });
+      });
 }
 
 template <Color side_to_move, CastlingRights castling_rights, PieceType side>
@@ -74,10 +98,14 @@ void walk_king_moves(const Board& board, const Square king_origin, const auto& v
                     [&](const auto origin) { king_danger_set |= rook_attack_set(origin, kingless_occupancy); });
     return king_danger_set;
   }();
-  walk_non_pawn_quiet_moves_and_captures<side_to_move, PieceType::KING>(
+  walk_non_pawn_quiet_moves_and_captures<side_to_move, castling_rights, PieceType::KING>(
       board, board[side_to_move, PieceType::KING], king_attack_set(king_origin) & ~king_danger_set, visit_move);
-  walk_castle<side_to_move, castling_rights, PieceType::KING>(board, king_danger_set, visit_move);
-  walk_castle<side_to_move, castling_rights, PieceType::QUEEN>(board, king_danger_set, visit_move);
+#define _(SIDE)                                     \
+  walk_castle<side_to_move, castling_rights, SIDE>( \
+      board, king_danger_set, [&](const auto& move) { visit_move.template operator()<castling_rights>(move); })
+  _(PieceType::KING);
+  _(PieceType::QUEEN);
+#undef _
 }
 
 template <Color side_to_move>
@@ -197,67 +225,73 @@ void walk_en_passant_captures(const Node& node, const Bitboard check_mask, const
   }
 }
 
-template <Color side_to_move, bool has_en_passant_target>
+template <Node::Context context>
 constexpr void walk_pawn_captures(const Node& node, const Bitboard check_mask, const Bitboard dg_pin_mask,
                                   const Bitboard hv_pin_mask, const auto& visit_move) {
   const auto walk_single_direction_captures = [&](const auto origins, const auto target_mask,
                                                   const auto& lookup_attack_set, const auto& origin_of) {
-    const auto targets = lookup_attack_set(side_to_move, origins) & node.board[!side_to_move] & target_mask;
-    const auto promotion_targets = targets & ColorTraits<side_to_move>::PROMOTION_RANK;
-    for_each_bit(promotion_targets, [&](const auto target) {
-      for (const auto promotion : {PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK, PieceType::QUEEN}) {
-        visit_move(CapturePromotion{
-            .origin = origin_of(side_to_move, target),
-            .target = target,
-            .side_to_move = side_to_move,
-            .promotion = promotion,
-            .victim = capture_victim_at<side_to_move>(node.board, target),
+    const auto targets =
+        lookup_attack_set(context.side_to_move, origins) & node.board[!context.side_to_move] & target_mask;
+    const auto promotion_targets = targets & ColorTraits<context.side_to_move>::PROMOTION_RANK;
+    for_each_capture<context.side_to_move, context.castling_rights>(
+        node.board, promotion_targets, [&]<auto new_castling_rights>(const auto target, const auto victim) {
+          for (const auto promotion : {PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK, PieceType::QUEEN}) {
+            visit_move.template operator()<new_castling_rights>(CapturePromotion{
+                .origin = origin_of(context.side_to_move, target),
+                .target = target,
+                .side_to_move = context.side_to_move,
+                .promotion = promotion,
+                .victim = victim,
+            });
+          }
         });
-      }
-    });
-    for_each_bit(targets ^ promotion_targets, [&](const auto target) {
-      visit_move(Capture{
-          .origin = origin_of(side_to_move, target),
-          .target = target,
-          .side_to_move = side_to_move,
-          .aggressor = PieceType::PAWN,
-          .victim = capture_victim_at<side_to_move>(node.board, target),
-      });
-    });
+    for_each_capture<context.side_to_move>(node.board, targets ^ promotion_targets,
+                                           [&](const auto target, const auto victim) {
+                                             visit_move.template operator()<context.castling_rights>(Capture{
+                                                 .origin = origin_of(context.side_to_move, target),
+                                                 .target = target,
+                                                 .side_to_move = context.side_to_move,
+                                                 .aggressor = PieceType::PAWN,
+                                                 .victim = victim,
+                                             });
+                                           });
   };
   const auto walk_captures = [&](const auto origins, const auto target_mask) {
     walk_single_direction_captures(origins, target_mask, pawn_left_attack_set, pawn_left_capture_origin);
     walk_single_direction_captures(origins, target_mask, pawn_right_attack_set, pawn_right_capture_origin);
   };
   const auto [pinned, unpinned] =
-      make_pinned_and_unpinned<side_to_move, PieceType::PAWN>(node.board, ~hv_pin_mask, dg_pin_mask);
+      make_pinned_and_unpinned<context.side_to_move, PieceType::PAWN>(node.board, ~hv_pin_mask, dg_pin_mask);
   walk_captures(unpinned, check_mask);
   // FIXME: constexpr this
   if (check_mask == ~Bitboard()) {
     walk_captures(pinned, dg_pin_mask);
   }
-  if constexpr (has_en_passant_target) {
-    walk_en_passant_captures<side_to_move>(node, check_mask, dg_pin_mask, pinned, unpinned, visit_move);
+  if constexpr (context.has_en_passant_target) {
+    walk_en_passant_captures<context.side_to_move>(
+        node, check_mask, dg_pin_mask, pinned, unpinned,
+        [&](const auto& move) { visit_move.template operator()<context.castling_rights>(move); });
   }
 }
 
-template <Color side_to_move, bool has_en_passant_target>
+template <Node::Context context>
 void walk_pawn_moves(const Node& node, const Bitboard check_mask, const Bitboard dg_pin_mask,
                      const Bitboard hv_pin_mask, const auto& visit_single_push_or_capture,
                      const std::invocable<const QuietMove&, Bitboard> auto& visit_double_push) {
-  walk_pawn_pushes<side_to_move>(node.board, check_mask, dg_pin_mask, hv_pin_mask, visit_single_push_or_capture,
-                                 visit_double_push);
-  walk_pawn_captures<side_to_move, has_en_passant_target>(node, check_mask, dg_pin_mask, hv_pin_mask,
-                                                          visit_single_push_or_capture);
+  walk_pawn_pushes<context.side_to_move>(
+      node.board, check_mask, dg_pin_mask, hv_pin_mask,
+      [&](const auto& move) { visit_single_push_or_capture.template operator()<context.castling_rights>(move); },
+      visit_double_push);
+  walk_pawn_captures<context>(node, check_mask, dg_pin_mask, hv_pin_mask, visit_single_push_or_capture);
 }
 
-template <Color side_to_move, PieceType piece_type>
+template <Color side_to_move, CastlingRights castling_rights, PieceType piece_type>
 void walk_piece_moves(const Board& board, const Bitboard origin_mask, const Bitboard check_mask,
                       const Bitboard pin_mask, const std::invocable<Square> auto& lookup_attack_set,
                       const auto& visit_move) {
   const auto walk_moves = [&](const auto origins, const auto target_mask) {
     for_each_bit_and_square(origins, [&](const auto origin_bit, const auto origin_square) {
-      walk_non_pawn_quiet_moves_and_captures<side_to_move, piece_type>(
+      walk_non_pawn_quiet_moves_and_captures<side_to_move, castling_rights, piece_type>(
           board, origin_bit, lookup_attack_set(origin_square) & target_mask, visit_move);
     });
   };
@@ -277,41 +311,48 @@ void walk_non_king_moves(const Node& node, const Square king_origin, const Bitbo
       make_pin_mask<context.side_to_move, PieceType::BISHOP>(node.board, king_origin, bishop_attack_set);
   const auto hv_pin_mask =
       make_pin_mask<context.side_to_move, PieceType::ROOK>(node.board, king_origin, rook_attack_set);
-  walk_pawn_moves<context.side_to_move, context.has_en_passant_target>(
+  walk_pawn_moves<context>(
       node, check_mask, dg_pin_mask, hv_pin_mask,
-      [&](const auto& move) { visitor.template visit_pawn_move<context.move()>(move); },
+      [&]<auto new_castling_rights>(const auto& move) {
+        visitor.template visit_pawn_move<context.move(new_castling_rights)>(move);
+      },
       [&](const QuietMove& double_push, const Bitboard en_passant_target) {
-        visitor.template visit_pawn_move<context.move(Node::Context::Move::PAWN_DOUBLE_PUSH)>(double_push,
-                                                                                              en_passant_target);
+        visitor.template visit_pawn_move<context.pawn_double_push()>(double_push, en_passant_target);
       });
-  walk_piece_moves<context.side_to_move, PieceType::KNIGHT>(
-      node.board, ~(dg_pin_mask | hv_pin_mask), check_mask, Bitboard(), knight_attack_set,
-      [&](const auto& move) { visitor.template visit_knight_move<context.move()>(move); });
-  walk_piece_moves<context.side_to_move, PieceType::BISHOP>(
+  walk_piece_moves<context.side_to_move, context.castling_rights, PieceType::KNIGHT>(
+      node.board, ~(dg_pin_mask | hv_pin_mask), check_mask, Bitboard(),
+      knight_attack_set, [&]<auto new_castling_rights>(const auto& move) {
+        visitor.template visit_knight_move<context.move(new_castling_rights)>(move);
+      });
+  walk_piece_moves<context.side_to_move, context.castling_rights, PieceType::BISHOP>(
       node.board, ~hv_pin_mask, check_mask, dg_pin_mask,
       [&](const auto origin) { return bishop_attack_set(origin, node.board.occupancy()); },
-      [&](const auto& move) { visitor.template visit_bishop_move<context.move()>(move); });
-  walk_piece_moves<context.side_to_move, PieceType::ROOK>(
+      [&]<auto new_castling_rights>(const auto& move) {
+        visitor.template visit_bishop_move<context.move(new_castling_rights)>(move);
+      });
+  walk_piece_moves<context.side_to_move, context.castling_rights, PieceType::ROOK>(
       node.board, ~dg_pin_mask, check_mask, hv_pin_mask,
       [&](const auto origin) { return rook_attack_set(origin, node.board.occupancy()); },
-      [&](const auto& move) {
+      [&]<auto new_castling_rights>(const auto& move) {
         switch (using ColorTraits = ColorTraits<context.side_to_move>; move.origin) {
           case ColorTraits::template CastlingTraits<PieceType::KING>::CASTLE.rook_origin:
-            visitor.template visit_rook_move<context.move(Node::Context::Move::KINGSIDE_ROOK_MOVE)>(move);
+            visitor.template visit_rook_move<context.kingside_rook_move(new_castling_rights)>(move);
             break;
           case ColorTraits::template CastlingTraits<PieceType::QUEEN>::CASTLE.rook_origin:
-            visitor.template visit_rook_move<context.move(Node::Context::Move::QUEENSIDE_ROOK_MOVE)>(move);
+            visitor.template visit_rook_move<context.queenside_rook_move(new_castling_rights)>(move);
             break;
           default:
-            visitor.template visit_rook_move<context.move()>(move);
+            visitor.template visit_rook_move<context.move(new_castling_rights)>(move);
             break;
         }
       });
   const auto walk_queen_moves = [&](const auto origin_mask, const auto pin_mask, const auto& lookup_attack_set) {
-    walk_piece_moves<context.side_to_move, PieceType::QUEEN>(
+    walk_piece_moves<context.side_to_move, context.castling_rights, PieceType::QUEEN>(
         node.board, origin_mask, check_mask, pin_mask,
         [&](const auto origin) { return lookup_attack_set(origin, node.board.occupancy()); },
-        [&](const auto& move) { visitor.template visit_queen_move<context.move()>(move); });
+        [&]<auto new_castling_rights>(const auto& move) {
+          visitor.template visit_queen_move<context.move(new_castling_rights)>(move);
+        });
   };
   walk_queen_moves(~hv_pin_mask, dg_pin_mask, bishop_attack_set);
   walk_queen_moves(~dg_pin_mask, hv_pin_mask, rook_attack_set);
@@ -322,9 +363,10 @@ export namespace prodigy::move_generator {
 template <Node::Context context, typename T>
 void walk(const Node& node, Visitor<T>&& visitor) {
   const auto king_origin = square_of(node.board[context.side_to_move, PieceType::KING]);
-  walk_king_moves<context.side_to_move, context.castling_rights>(node.board, king_origin, [&](const auto& move) {
-    visitor.template visit_king_move<context.move(Node::Context::Move::KING_MOVE)>(move);
-  });
+  walk_king_moves<context.side_to_move, context.castling_rights>(
+      node.board, king_origin, [&]<auto new_castling_rights>(const auto& move) {
+        visitor.template visit_king_move<context.king_move(new_castling_rights)>(move);
+      });
   switch (const auto checkers = make_checkers<context.side_to_move>(node.board, king_origin); popcount(checkers)) {
     case 0:
       walk_non_king_moves<context>(node, king_origin, ~Bitboard(), visitor);
