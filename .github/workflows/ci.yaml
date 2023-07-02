@@ -33,7 +33,7 @@ jobs:
           key: llvm-cache-${{ env.LLVM_VERSION }}
 
       - name: Setup LLVM
-        uses: KyleMayes/install-llvm-action@v1.8.1
+        uses: KyleMayes/install-llvm-action@v1.8.2
         with:
           version: ${{ env.LLVM_VERSION }}
           directory: ${{ env.LLVM_CACHE }}
