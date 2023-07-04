@@ -1,6 +1,7 @@
 CI:
 - LTO
 - macOS
+- Re-enable sanitizers
 - Why's -stdlib=libc++ needed for std::expected? https://github.com/llvm/llvm-project/issues/62801
 
 Tooling:
