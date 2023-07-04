@@ -110,7 +110,6 @@ void walk_king_moves(const Board& board, const Square king_origin, const auto& v
 
 template <Color side_to_move>
 Bitboard make_checkers(const Board& board, const Square king_origin) noexcept {
-  // FIXME: try short circuiting using empty(king_danger_set & board[side_to_move, PieceType::KING])
   auto checkers = (pawn_left_attack_set(side_to_move, board[side_to_move, PieceType::KING]) |
                    pawn_right_attack_set(side_to_move, board[side_to_move, PieceType::KING])) &
                   board[!side_to_move, PieceType::PAWN];
@@ -142,12 +141,13 @@ constexpr std::pair<Bitboard, Bitboard> make_pinned_and_unpinned(const Board& bo
 }
 
 template <Color side_to_move>
-constexpr void walk_pawn_pushes(const Board& board, const Bitboard check_mask, const Bitboard dg_pin_mask,
-                                const Bitboard hv_pin_mask, const auto& visit_single_push,
-                                const std::invocable<const QuietMove&, Bitboard> auto& visit_double_push) {
-  const auto walk_pushes = [&, empty = ~board.occupancy()](const auto origins, const auto target_mask) {
+constexpr void walk_pawn_pushes(const Board& board, const Bitboard dg_pin_mask, const Bitboard hv_pin_mask,
+                                const auto& visit_single_push,
+                                const std::invocable<const QuietMove&, Bitboard> auto& visit_double_push,
+                                const std::same_as<Bitboard> auto... check_mask) {
+  const auto walk_pushes = [&, empty = ~board.occupancy()](const auto origins, const auto... target_mask) {
     const auto unmasked_single_push_targets = pawn_single_push_set(side_to_move, origins) & empty;
-    const auto single_push_targets = unmasked_single_push_targets & target_mask;
+    const auto single_push_targets = (unmasked_single_push_targets & ... & target_mask);
     const auto promotion_targets = single_push_targets & ColorTraits<side_to_move>::PROMOTION_RANK;
     for_each_bit(promotion_targets, [&](const auto target) {
       for (const auto promotion : {PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK, PieceType::QUEEN}) {
@@ -170,7 +170,7 @@ constexpr void walk_pawn_pushes(const Board& board, const Bitboard check_mask, c
     const auto double_push_targets =
         pawn_single_push_set(side_to_move,
                              unmasked_single_push_targets & ColorTraits<side_to_move>::EN_PASSANT_TARGET_RANK) &
-        empty & target_mask;
+        (empty & ... & target_mask);
     for_each_bit(double_push_targets, [&](const auto target) {
       const auto en_passant_target = pawn_single_push_origin(side_to_move, target);
       visit_double_push(
@@ -185,17 +185,16 @@ constexpr void walk_pawn_pushes(const Board& board, const Bitboard check_mask, c
   };
   const auto [pinned, unpinned] =
       make_pinned_and_unpinned<side_to_move, PieceType::PAWN>(board, ~dg_pin_mask, hv_pin_mask);
-  walk_pushes(unpinned, check_mask);
-  // FIXME: constexpr this
-  if (check_mask == ~Bitboard()) {
+  walk_pushes(unpinned, check_mask...);
+  if constexpr (sizeof...(check_mask) == 0) {
     walk_pushes(pinned, hv_pin_mask);
   }
 }
 
 template <Color side_to_move>
-void walk_en_passant_captures(const Node& node, const Bitboard check_mask, const Bitboard dg_pin_mask,
-                              const Bitboard dg_pinned, const Bitboard unpinned,
-                              const std::invocable<const EnPassantCapture&> auto& visit_move) {
+void walk_en_passant_captures(const Node& node, const Bitboard dg_pin_mask, const Bitboard dg_pinned,
+                              const Bitboard unpinned, const std::invocable<const EnPassantCapture&> auto& visit_move,
+                              const std::same_as<Bitboard> auto... check_mask) {
   const auto walk_single_direction_en_passant_capture = [&](const auto origins, const auto& lookup_attack_set) {
     if (const auto origin = origins & lookup_attack_set(!side_to_move, node.en_passant_target); any(origin)) {
       // FIXME: optimize (only compute once?, pass in king_origin?)
@@ -217,8 +216,7 @@ void walk_en_passant_captures(const Node& node, const Bitboard check_mask, const
     walk_single_direction_en_passant_capture(origins, pawn_right_attack_set);
   };
   walk_en_passant_captures(unpinned);
-  // FIXME: constexpr this
-  if (check_mask == ~Bitboard()) {
+  if constexpr (sizeof...(check_mask) == 0) {
     if (any(dg_pin_mask & node.en_passant_target)) {
       walk_en_passant_captures(dg_pinned);
     }
@@ -226,12 +224,12 @@ void walk_en_passant_captures(const Node& node, const Bitboard check_mask, const
 }
 
 template <Node::Context context>
-constexpr void walk_pawn_captures(const Node& node, const Bitboard check_mask, const Bitboard dg_pin_mask,
-                                  const Bitboard hv_pin_mask, const auto& visit_move) {
-  const auto walk_single_direction_captures = [&](const auto origins, const auto target_mask,
-                                                  const auto& lookup_attack_set, const auto& origin_of) {
+constexpr void walk_pawn_captures(const Node& node, const Bitboard dg_pin_mask, const Bitboard hv_pin_mask,
+                                  const auto& visit_move, const std::same_as<Bitboard> auto... check_mask) {
+  const auto walk_single_direction_captures = [&](const auto origins, const auto& lookup_attack_set,
+                                                  const auto& origin_of, const auto... target_mask) {
     const auto targets =
-        lookup_attack_set(context.side_to_move, origins) & node.board[!context.side_to_move] & target_mask;
+        lookup_attack_set(context.side_to_move, origins) & (node.board[!context.side_to_move] & ... & target_mask);
     const auto promotion_targets = targets & ColorTraits<context.side_to_move>::PROMOTION_RANK;
     for_each_capture<context.side_to_move, context.castling_rights>(
         node.board, promotion_targets, [&]<auto new_castling_rights>(const auto target, const auto victim) {
@@ -256,82 +254,83 @@ constexpr void walk_pawn_captures(const Node& node, const Bitboard check_mask, c
                                              });
                                            });
   };
-  const auto walk_captures = [&](const auto origins, const auto target_mask) {
-    walk_single_direction_captures(origins, target_mask, pawn_left_attack_set, pawn_left_capture_origin);
-    walk_single_direction_captures(origins, target_mask, pawn_right_attack_set, pawn_right_capture_origin);
+  const auto walk_captures = [&](const auto origins, const auto... target_mask) {
+    walk_single_direction_captures(origins, pawn_left_attack_set, pawn_left_capture_origin, target_mask...);
+    walk_single_direction_captures(origins, pawn_right_attack_set, pawn_right_capture_origin, target_mask...);
   };
   const auto [pinned, unpinned] =
       make_pinned_and_unpinned<context.side_to_move, PieceType::PAWN>(node.board, ~hv_pin_mask, dg_pin_mask);
-  walk_captures(unpinned, check_mask);
-  // FIXME: constexpr this
-  if (check_mask == ~Bitboard()) {
+  walk_captures(unpinned, check_mask...);
+  if constexpr (sizeof...(check_mask) == 0) {
     walk_captures(pinned, dg_pin_mask);
   }
   if constexpr (context.has_en_passant_target) {
     walk_en_passant_captures<context.side_to_move>(
-        node, check_mask, dg_pin_mask, pinned, unpinned,
-        [&](const auto& move) { visit_move.template operator()<context.castling_rights>(move); });
+        node, dg_pin_mask, pinned, unpinned,
+        [&](const auto& move) { visit_move.template operator()<context.castling_rights>(move); }, check_mask...);
   }
 }
 
 template <Node::Context context>
-void walk_pawn_moves(const Node& node, const Bitboard check_mask, const Bitboard dg_pin_mask,
-                     const Bitboard hv_pin_mask, const auto& visit_single_push_or_capture,
-                     const std::invocable<const QuietMove&, Bitboard> auto& visit_double_push) {
+void walk_pawn_moves(const Node& node, const Bitboard dg_pin_mask, const Bitboard hv_pin_mask,
+                     const auto& visit_single_push_or_capture,
+                     const std::invocable<const QuietMove&, Bitboard> auto& visit_double_push,
+                     const std::same_as<Bitboard> auto... check_mask) {
   walk_pawn_pushes<context.side_to_move>(
-      node.board, check_mask, dg_pin_mask, hv_pin_mask,
+      node.board, dg_pin_mask, hv_pin_mask,
       [&](const auto& move) { visit_single_push_or_capture.template operator()<context.castling_rights>(move); },
-      visit_double_push);
-  walk_pawn_captures<context>(node, check_mask, dg_pin_mask, hv_pin_mask, visit_single_push_or_capture);
+      visit_double_push, check_mask...);
+  walk_pawn_captures<context>(node, dg_pin_mask, hv_pin_mask, visit_single_push_or_capture, check_mask...);
 }
 
 template <Color side_to_move, CastlingRights castling_rights, PieceType piece_type>
-void walk_piece_moves(const Board& board, const Bitboard origin_mask, const Bitboard check_mask,
-                      const Bitboard pin_mask, const std::invocable<Square> auto& lookup_attack_set,
-                      const auto& visit_move) {
-  const auto walk_moves = [&](const auto origins, const auto target_mask) {
+void walk_piece_moves(const Board& board, const Bitboard origin_mask, const Bitboard pin_mask,
+                      const std::invocable<Square> auto& lookup_attack_set, const auto& visit_move,
+                      const std::same_as<Bitboard> auto... check_mask) {
+  const auto walk_moves = [&](const auto origins, const auto... target_mask) {
     for_each_bit_and_square(origins, [&](const auto origin_bit, const auto origin_square) {
       walk_non_pawn_quiet_moves_and_captures<side_to_move, castling_rights, piece_type>(
-          board, origin_bit, lookup_attack_set(origin_square) & target_mask, visit_move);
+          board, origin_bit, (lookup_attack_set(origin_square) & ... & target_mask), visit_move);
     });
   };
   const auto [pinned, unpinned] = make_pinned_and_unpinned<side_to_move, piece_type>(board, origin_mask, pin_mask);
-  walk_moves(unpinned, check_mask);
-  if constexpr (piece_type != PieceType::KNIGHT) {
-    // FIXME: constexpr this
-    if (check_mask == ~Bitboard()) {
-      walk_moves(pinned, pin_mask);
-    }
+  walk_moves(unpinned, check_mask...);
+  if constexpr (piece_type != PieceType::KNIGHT && sizeof...(check_mask) == 0) {
+    walk_moves(pinned, pin_mask);
   }
 }
 
 template <Node::Context context, typename T>
-void walk_non_king_moves(const Node& node, const Square king_origin, const Bitboard check_mask, Visitor<T>& visitor) {
+void walk_non_king_moves(const Node& node, const Square king_origin, Visitor<T>& visitor,
+                         const std::same_as<Bitboard> auto... check_mask) {
   const auto dg_pin_mask =
       make_pin_mask<context.side_to_move, PieceType::BISHOP>(node.board, king_origin, bishop_attack_set);
   const auto hv_pin_mask =
       make_pin_mask<context.side_to_move, PieceType::ROOK>(node.board, king_origin, rook_attack_set);
   walk_pawn_moves<context>(
-      node, check_mask, dg_pin_mask, hv_pin_mask,
+      node, dg_pin_mask, hv_pin_mask,
       [&]<auto new_castling_rights>(const auto& move) {
         visitor.template visit_pawn_move<context.move(new_castling_rights)>(move);
       },
       [&](const QuietMove& double_push, const Bitboard en_passant_target) {
         visitor.template visit_pawn_move<context.pawn_double_push()>(double_push, en_passant_target);
-      });
+      },
+      check_mask...);
   walk_piece_moves<context.side_to_move, context.castling_rights, PieceType::KNIGHT>(
-      node.board, ~(dg_pin_mask | hv_pin_mask), check_mask, Bitboard(),
-      knight_attack_set, [&]<auto new_castling_rights>(const auto& move) {
+      node.board, ~(dg_pin_mask | hv_pin_mask), Bitboard(), knight_attack_set,
+      [&]<auto new_castling_rights>(const auto& move) {
         visitor.template visit_knight_move<context.move(new_castling_rights)>(move);
-      });
+      },
+      check_mask...);
   walk_piece_moves<context.side_to_move, context.castling_rights, PieceType::BISHOP>(
-      node.board, ~hv_pin_mask, check_mask, dg_pin_mask,
+      node.board, ~hv_pin_mask, dg_pin_mask,
       [&](const auto origin) { return bishop_attack_set(origin, node.board.occupancy()); },
       [&]<auto new_castling_rights>(const auto& move) {
         visitor.template visit_bishop_move<context.move(new_castling_rights)>(move);
-      });
+      },
+      check_mask...);
   walk_piece_moves<context.side_to_move, context.castling_rights, PieceType::ROOK>(
-      node.board, ~dg_pin_mask, check_mask, hv_pin_mask,
+      node.board, ~dg_pin_mask, hv_pin_mask,
       [&](const auto origin) { return rook_attack_set(origin, node.board.occupancy()); },
       [&]<auto new_castling_rights>(const auto& move) {
         switch (using ColorTraits = ColorTraits<context.side_to_move>; move.origin) {
@@ -345,14 +344,16 @@ void walk_non_king_moves(const Node& node, const Square king_origin, const Bitbo
             visitor.template visit_rook_move<context.move(new_castling_rights)>(move);
             break;
         }
-      });
+      },
+      check_mask...);
   const auto walk_queen_moves = [&](const auto origin_mask, const auto pin_mask, const auto& lookup_attack_set) {
     walk_piece_moves<context.side_to_move, context.castling_rights, PieceType::QUEEN>(
-        node.board, origin_mask, check_mask, pin_mask,
+        node.board, origin_mask, pin_mask,
         [&](const auto origin) { return lookup_attack_set(origin, node.board.occupancy()); },
         [&]<auto new_castling_rights>(const auto& move) {
           visitor.template visit_queen_move<context.move(new_castling_rights)>(move);
-        });
+        },
+        check_mask...);
   };
   walk_queen_moves(~hv_pin_mask, dg_pin_mask, bishop_attack_set);
   walk_queen_moves(~dg_pin_mask, hv_pin_mask, rook_attack_set);
@@ -369,10 +370,10 @@ void walk(const Node& node, Visitor<T>&& visitor) {
       });
   switch (const auto checkers = make_checkers<context.side_to_move>(node.board, king_origin); popcount(checkers)) {
     case 0:
-      walk_non_king_moves<context>(node, king_origin, ~Bitboard(), visitor);
+      walk_non_king_moves<context>(node, king_origin, visitor);
       break;
     case 1:
-      walk_non_king_moves<context>(node, king_origin, half_open_segment(square_of(checkers), king_origin), visitor);
+      walk_non_king_moves<context>(node, king_origin, visitor, half_open_segment(square_of(checkers), king_origin));
       break;
     default:
       break;

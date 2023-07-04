@@ -1,6 +1,5 @@
 CI:
 - LTO
-- macOS
 - Why's -stdlib=libc++ needed for std::expected? https://github.com/llvm/llvm-project/issues/62801
 
 Tooling:
@@ -8,7 +7,6 @@ Tooling:
 - coverage
 
 Chess:
-- Magic bitboards: consider black magic bitboards, compact table by removing unused segment prefix/suffix
 - Node: try aligning to cache line size
 - walk: focus on captures if the singular checker is a knight or pawn (no need to visit quiet moves).
 - Node: save en passant victim instead of target
