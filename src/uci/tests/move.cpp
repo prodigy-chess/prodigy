@@ -53,7 +53,7 @@ TEST_CASE("to_move") {
       .promotion = PieceType::QUEEN,
       .victim = PieceType::KNIGHT,
   }>();
-  validate<EnPassantCapture{
+  validate<EnPassant{
       .origin = to_bitboard(Square::E5),
       .target = to_bitboard(Square::D6),
       .victim_origin = to_bitboard(Square::D5),

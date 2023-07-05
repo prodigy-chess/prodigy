@@ -5,15 +5,15 @@ import prodigy.core;
 export namespace prodigy::move_generator {
 struct Node {
   struct Context {
-    consteval Context pawn_double_push() const noexcept {
+    consteval Context enable_en_passant() const noexcept {
       return {
           .side_to_move = !side_to_move,
           .castling_rights = castling_rights,
-          .has_en_passant_target = true,
+          .can_en_passant = true,
       };
     }
 
-    consteval Context kingside_rook_move(const CastlingRights castling_rights) const noexcept {
+    consteval Context move_kingside_rook(const CastlingRights castling_rights) const noexcept {
       return move([&] {
         switch (side_to_move) {
           case Color::WHITE:
@@ -24,7 +24,7 @@ struct Node {
       }());
     }
 
-    consteval Context queenside_rook_move(const CastlingRights castling_rights) const noexcept {
+    consteval Context move_queenside_rook(const CastlingRights castling_rights) const noexcept {
       return move([&] {
         switch (side_to_move) {
           case Color::WHITE:
@@ -35,7 +35,7 @@ struct Node {
       }());
     }
 
-    consteval Context king_move(const CastlingRights castling_rights) const noexcept {
+    consteval Context move_king(const CastlingRights castling_rights) const noexcept {
       return move([&] {
         switch (side_to_move) {
           case Color::WHITE:
@@ -50,7 +50,7 @@ struct Node {
       return {
           .side_to_move = !side_to_move,
           .castling_rights = castling_rights,
-          .has_en_passant_target = false,
+          .can_en_passant = false,
       };
     }
 
@@ -58,7 +58,7 @@ struct Node {
 
     Color side_to_move;
     CastlingRights castling_rights;
-    bool has_en_passant_target;
+    bool can_en_passant;
   };
 
   friend consteval bool operator==(const Node&, const Node&) = default;

@@ -43,7 +43,7 @@ struct CapturePromotion final {
   PieceType victim;
 };
 
-struct EnPassantCapture final {
+struct EnPassant final {
   Bitboard origin;
   Bitboard target;
   Bitboard victim_origin;
