@@ -15,7 +15,7 @@ struct MoveCounts {
   std::uint64_t pawn_captures;
   std::uint64_t quiet_promotions;
   std::uint64_t capture_promotions;
-  std::uint64_t en_passant_captures;
+  std::uint64_t en_passants;
   std::uint64_t knight_quiet_moves;
   std::uint64_t knight_captures;
   std::uint64_t bishop_quiet_moves;
@@ -62,8 +62,8 @@ class Visitor : public move_generator::Visitor<Visitor> {
   }
 
   template <Node::Context>
-  constexpr void visit_pawn_move(const EnPassantCapture&) const noexcept {
-    ++move_counts_.en_passant_captures;
+  constexpr void visit_pawn_move(const EnPassant&) const noexcept {
+    ++move_counts_.en_passants;
   }
 
   template <Node::Context>
@@ -433,7 +433,7 @@ TEST_CASE("walk") {
           {
               .pawn_single_pushes = 2,
               .pawn_captures = 1,
-              .en_passant_captures = 1,
+              .en_passants = 1,
               .king_quiet_moves = 3,
           },
       },
@@ -442,7 +442,7 @@ TEST_CASE("walk") {
           "unpinned single en passant capture in middle",
           {
               .pawn_single_pushes = 1,
-              .en_passant_captures = 1,
+              .en_passants = 1,
               .king_quiet_moves = 5,
           },
       },
@@ -452,7 +452,7 @@ TEST_CASE("walk") {
           {
               .pawn_single_pushes = 2,
               .pawn_captures = 2,
-              .en_passant_captures = 2,
+              .en_passants = 2,
               .king_quiet_moves = 5,
           },
       },
@@ -460,7 +460,7 @@ TEST_CASE("walk") {
           "1q5k/8/8/3pP3/8/8/7K/8 w - d6 0 1",
           "en passant capture on pin mask",
           {
-              .en_passant_captures = 1,
+              .en_passants = 1,
               .king_quiet_moves = 5,
           },
       },
@@ -469,7 +469,7 @@ TEST_CASE("walk") {
           "en passant capture not on dg pin mask",
           {
               .pawn_single_pushes = 1,
-              .en_passant_captures = 1,
+              .en_passants = 1,
               .king_quiet_moves = 8,
           },
       },
@@ -477,7 +477,7 @@ TEST_CASE("walk") {
           "2r4k/8/8/2PpP3/2K5/8/8/8 w - d6 0 1",
           "en passant capture not on hv pin mask",
           {
-              .en_passant_captures = 1,
+              .en_passants = 1,
               .king_quiet_moves = 6,
               .king_captures = 1,
           },
@@ -486,7 +486,7 @@ TEST_CASE("walk") {
           "7k/8/8/3pP3/4K3/8/8/8 w - d6 0 1",
           "en passant capture check evasion",
           {
-              .en_passant_captures = 1,
+              .en_passants = 1,
               .king_quiet_moves = 6,
               .king_captures = 1,
           },

@@ -21,7 +21,7 @@ TEST_CASE("dispatch") {
                        .side_to_move = Color::WHITE,
                        .castling_rights = CastlingRights::WHITE_KINGSIDE | CastlingRights::WHITE_QUEENSIDE |
                                           CastlingRights::BLACK_KINGSIDE | CastlingRights::BLACK_QUEENSIDE,
-                       .has_en_passant_target = false,
+                       .can_en_passant = false,
                    });
   }
   {
@@ -32,7 +32,7 @@ TEST_CASE("dispatch") {
     STATIC_REQUIRE(node.second == Node::Context{
                                       .side_to_move = Color::BLACK,
                                       .castling_rights = CastlingRights(),
-                                      .has_en_passant_target = true,
+                                      .can_en_passant = true,
                                   });
   }
 }

@@ -192,17 +192,17 @@ constexpr void walk_pawn_pushes(const Board& board, const Bitboard dg_pin_mask, 
 }
 
 template <Color side_to_move>
-void walk_en_passant_captures(const Node& node, const Bitboard dg_pin_mask, const Bitboard dg_pinned,
-                              const Bitboard unpinned, const std::invocable<const EnPassantCapture&> auto& visit_move,
-                              const std::same_as<Bitboard> auto... check_mask) {
-  const auto walk_single_direction_en_passant_capture = [&](const auto origins, const auto& lookup_attack_set) {
+void walk_en_passants(const Node& node, const Bitboard dg_pin_mask, const Bitboard dg_pinned, const Bitboard unpinned,
+                      const std::invocable<const EnPassant&> auto& visit_move,
+                      const std::same_as<Bitboard> auto... check_mask) {
+  const auto walk_single_direction_en_passants = [&](const auto origins, const auto& lookup_attack_set) {
     if (const auto origin = origins & lookup_attack_set(!side_to_move, node.en_passant_target); any(origin)) {
       // FIXME: optimize (only compute once?, pass in king_origin?)
       if (const auto victim_origin = pawn_single_push_set(!side_to_move, node.en_passant_target);
           empty(rook_attack_set(square_of(node.board[side_to_move, PieceType::KING]),
                                 node.board.occupancy() ^ origin ^ node.en_passant_target ^ victim_origin) &
                 (node.board[!side_to_move, PieceType::ROOK] | node.board[!side_to_move, PieceType::QUEEN]))) {
-        visit_move(EnPassantCapture{
+        visit_move(EnPassant{
             .origin = origin,
             .target = node.en_passant_target,
             .victim_origin = victim_origin,
@@ -211,14 +211,14 @@ void walk_en_passant_captures(const Node& node, const Bitboard dg_pin_mask, cons
       }
     }
   };
-  const auto walk_en_passant_captures = [&](const auto origins) {
-    walk_single_direction_en_passant_capture(origins, pawn_left_attack_set);
-    walk_single_direction_en_passant_capture(origins, pawn_right_attack_set);
+  const auto walk_en_passants = [&](const auto origins) {
+    walk_single_direction_en_passants(origins, pawn_left_attack_set);
+    walk_single_direction_en_passants(origins, pawn_right_attack_set);
   };
-  walk_en_passant_captures(unpinned);
+  walk_en_passants(unpinned);
   if constexpr (sizeof...(check_mask) == 0) {
     if (any(dg_pin_mask & node.en_passant_target)) {
-      walk_en_passant_captures(dg_pinned);
+      walk_en_passants(dg_pinned);
     }
   }
 }
@@ -264,8 +264,8 @@ constexpr void walk_pawn_captures(const Node& node, const Bitboard dg_pin_mask, 
   if constexpr (sizeof...(check_mask) == 0) {
     walk_captures(pinned, dg_pin_mask);
   }
-  if constexpr (context.has_en_passant_target) {
-    walk_en_passant_captures<context.side_to_move>(
+  if constexpr (context.can_en_passant) {
+    walk_en_passants<context.side_to_move>(
         node, dg_pin_mask, pinned, unpinned,
         [&](const auto& move) { visit_move.template operator()<context.castling_rights>(move); }, check_mask...);
   }
@@ -313,7 +313,7 @@ void walk_non_king_moves(const Node& node, const Square king_origin, Visitor<T>&
         visitor.template visit_pawn_move<context.move(new_castling_rights)>(move);
       },
       [&](const QuietMove& double_push, const Bitboard en_passant_target) {
-        visitor.template visit_pawn_move<context.pawn_double_push()>(double_push, en_passant_target);
+        visitor.template visit_pawn_move<context.enable_en_passant()>(double_push, en_passant_target);
       },
       check_mask...);
   walk_piece_moves<context.side_to_move, context.castling_rights, PieceType::KNIGHT>(
@@ -335,10 +335,10 @@ void walk_non_king_moves(const Node& node, const Square king_origin, Visitor<T>&
       [&]<auto new_castling_rights>(const auto& move) {
         switch (using ColorTraits = ColorTraits<context.side_to_move>; move.origin) {
           case ColorTraits::template CastlingTraits<PieceType::KING>::CASTLE.rook_origin:
-            visitor.template visit_rook_move<context.kingside_rook_move(new_castling_rights)>(move);
+            visitor.template visit_rook_move<context.move_kingside_rook(new_castling_rights)>(move);
             break;
           case ColorTraits::template CastlingTraits<PieceType::QUEEN>::CASTLE.rook_origin:
-            visitor.template visit_rook_move<context.queenside_rook_move(new_castling_rights)>(move);
+            visitor.template visit_rook_move<context.move_queenside_rook(new_castling_rights)>(move);
             break;
           default:
             visitor.template visit_rook_move<context.move(new_castling_rights)>(move);
@@ -366,7 +366,7 @@ void walk(const Node& node, Visitor<T>&& visitor) {
   const auto king_origin = square_of(node.board[context.side_to_move, PieceType::KING]);
   walk_king_moves<context.side_to_move, context.castling_rights>(
       node.board, king_origin, [&]<auto new_castling_rights>(const auto& move) {
-        visitor.template visit_king_move<context.king_move(new_castling_rights)>(move);
+        visitor.template visit_king_move<context.move_king(new_castling_rights)>(move);
       });
   switch (const auto checkers = make_checkers<context.side_to_move>(node.board, king_origin); popcount(checkers)) {
     case 0:

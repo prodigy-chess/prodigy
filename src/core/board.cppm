@@ -78,7 +78,7 @@ class Board {
     occupancy_ ^= origin;
   }
 
-  constexpr void apply(const EnPassantCapture& move) noexcept {
+  constexpr void apply(const EnPassant& move) noexcept {
     const auto& [origin, target, victim_origin, side_to_move] = move;
     apply({
         .origin = origin,
