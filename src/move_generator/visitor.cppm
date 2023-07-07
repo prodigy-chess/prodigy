@@ -1,5 +1,6 @@
 module;
 
+#include <concepts>
 #include <utility>
 
 export module prodigy.move_generator:visitor;
@@ -12,11 +13,6 @@ export namespace prodigy::move_generator {
 template <typename Derived>
 class Visitor {
  public:
-  template <Node::Context context>
-  constexpr void visit_pawn_move(const QuietMove& double_push, const Bitboard en_passant_target) {
-    static_cast<Derived*>(this)->template visit_pawn_move<context>(double_push, en_passant_target);
-  }
-
   template <Node::Context context, typename Move>
   constexpr void visit_pawn_move(const Move& move) {
     static_cast<Derived*>(this)->template visit_pawn_move<context>(move);
@@ -48,11 +44,10 @@ class Visitor {
   }
 
  private:
-  template <typename Move>
+  template <std::invocable<> Undo>
   class AutoUndo {
    public:
-    constexpr explicit AutoUndo(Node& node, const Move& move, const Bitboard en_passant_target) noexcept
-        : node_(node), move_(move), en_passant_target_(en_passant_target) {}
+    constexpr explicit AutoUndo(Undo&& undo) noexcept : undo_(std::forward<Undo>(undo)) {}
 
     AutoUndo(const AutoUndo&) = delete;
     AutoUndo& operator=(const AutoUndo&) = delete;
@@ -60,22 +55,28 @@ class Visitor {
     AutoUndo(AutoUndo&&) = delete;
     AutoUndo& operator=(AutoUndo&&) = delete;
 
-    constexpr ~AutoUndo() {
-      node_.board.apply(move_);
-      node_.en_passant_target = en_passant_target_;
-    }
+    constexpr ~AutoUndo() { std::forward<Undo>(undo_)(); }
 
    private:
-    Node& node_;
-    const Move& move_;
-    Bitboard en_passant_target_;
+    Undo undo_;
   };
 
+  template <std::invocable<> Undo>
+  explicit AutoUndo(Undo&&) -> AutoUndo<Undo>;
+
  protected:
-  template <typename Move>
-  static constexpr AutoUndo<Move> scoped_move(Node& node, const Move& move, const Bitboard en_passant_target) noexcept {
+  template <bool can_en_passant, typename Move>
+  static constexpr auto scoped_move(Node& node, const Move& move) noexcept {
     node.board.apply(move);
-    return AutoUndo<Move>(node, move, std::exchange(node.en_passant_target, en_passant_target));
+    if constexpr (can_en_passant) {
+      static_assert(std::same_as<Move, QuietMove>);
+      return AutoUndo([&, en_passant_victim_origin = std::exchange(node.en_passant_victim_origin, move.target)] {
+        node.board.apply(move);
+        node.en_passant_victim_origin = en_passant_victim_origin;
+      });
+    } else {
+      return AutoUndo([&] { node.board.apply(move); });
+    }
   }
 };
 }  // namespace prodigy::move_generator

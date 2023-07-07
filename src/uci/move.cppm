@@ -1,8 +1,8 @@
 module;
 
+#include <concepts>
 #include <iosfwd>
 #include <optional>
-#include <type_traits>
 
 export module prodigy.uci:move;
 
@@ -20,7 +20,7 @@ struct Move {
 template <typename T>
 constexpr Move to_move(const T& value) noexcept {
   Move move;
-  if constexpr (std::is_same_v<T, Castle>) {
+  if constexpr (std::same_as<T, Castle>) {
     move.origin = square_of(value.king_origin);
     move.target = square_of(value.king_target);
   } else {

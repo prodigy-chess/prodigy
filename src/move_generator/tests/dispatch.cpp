@@ -14,8 +14,12 @@ TEST_CASE("dispatch") {
   {
     static constexpr auto position = parse_fen(STARTING_FEN).value();
     static constexpr auto node = to_node(position);
-    STATIC_REQUIRE(node.first ==
-                   Node{position.board, position.en_passant_target.transform(to_bitboard).value_or(Bitboard())});
+    STATIC_REQUIRE(node.first == Node{position.board, position.en_passant_target
+                                                          .transform([](const auto en_passant_target) {
+                                                            return shift(to_bitboard(en_passant_target),
+                                                                         Direction::SOUTH);
+                                                          })
+                                                          .value_or(Bitboard())});
     STATIC_REQUIRE(node.second ==
                    Node::Context{
                        .side_to_move = Color::WHITE,
@@ -27,8 +31,12 @@ TEST_CASE("dispatch") {
   {
     static constexpr auto position = parse_fen("8/8/8/8/8/8/8/8 b - e3 0 1").value();
     static constexpr auto node = to_node(position);
-    STATIC_REQUIRE(node.first ==
-                   Node{position.board, position.en_passant_target.transform(to_bitboard).value_or(Bitboard())});
+    STATIC_REQUIRE(node.first == Node{position.board, position.en_passant_target
+                                                          .transform([](const auto en_passant_target) {
+                                                            return shift(to_bitboard(en_passant_target),
+                                                                         Direction::NORTH);
+                                                          })
+                                                          .value_or(Bitboard())});
     STATIC_REQUIRE(node.second == Node::Context{
                                       .side_to_move = Color::BLACK,
                                       .castling_rights = CastlingRights(),

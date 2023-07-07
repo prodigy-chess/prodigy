@@ -36,14 +36,11 @@ class Visitor : public move_generator::Visitor<Visitor> {
  public:
   constexpr explicit Visitor(MoveCounts& move_counts) noexcept : move_counts_(move_counts) {}
 
-  template <Node::Context>
-  constexpr void visit_pawn_move(const QuietMove&) const noexcept {
-    ++move_counts_.pawn_single_pushes;
-  }
-
-  template <Node::Context>
-  constexpr void visit_pawn_move(const QuietMove&, Bitboard) const noexcept {
-    ++move_counts_.pawn_double_pushes;
+  template <Node::Context context>
+  constexpr void visit_pawn_move(const QuietMove& move) const noexcept {
+    shift(move.origin, !context.side_to_move == Color::WHITE ? Direction::NORTH : Direction::SOUTH) == move.target
+        ? ++move_counts_.pawn_single_pushes
+        : ++move_counts_.pawn_double_pushes;
   }
 
   template <Node::Context>
