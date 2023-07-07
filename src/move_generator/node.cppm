@@ -64,6 +64,6 @@ struct Node {
   friend consteval bool operator==(const Node&, const Node&) = default;
 
   Board board;
-  Bitboard en_passant_target;
+  Bitboard en_passant_victim_origin;
 };
 }  // namespace prodigy::move_generator

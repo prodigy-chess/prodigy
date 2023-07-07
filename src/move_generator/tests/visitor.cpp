@@ -14,7 +14,11 @@ constexpr Position to_position(const Node& node, const Ply halfmove_clock) noexc
       .board = node.board,
       .side_to_move = context.side_to_move,
       .castling_rights = context.castling_rights,
-      .en_passant_target = context.can_en_passant ? std::optional(square_of(node.en_passant_target)) : std::nullopt,
+      .en_passant_target = context.can_en_passant
+                               ? std::optional(square_of(shift(
+                                     node.en_passant_victim_origin,
+                                     !context.side_to_move == Color::WHITE ? Direction::SOUTH : Direction::NORTH)))
+                               : std::nullopt,
       .halfmove_clock = halfmove_clock,
       .fullmove_number = 1,
   };
@@ -25,9 +29,15 @@ class Visitor : public move_generator::Visitor<Visitor> {
   constexpr explicit Visitor(Node& node) noexcept : node_(node) {}
 
   template <Node::Context context>
-  constexpr void visit_pawn_move(const QuietMove& double_push, const Bitboard en_passant_target) const noexcept {
-    visit<context>("r3k2r/p1ppqpb1/bn2pnp1/3PN3/Pp2P3/2N2Q1p/1PPBBPPP/R3K2R b KQkq a3 0 1", double_push, Ply{0},
-                   en_passant_target);
+    requires(context.can_en_passant)
+  constexpr void visit_pawn_move(const QuietMove& move) const noexcept {
+    visit<context>("r3k2r/p1ppqpb1/bn2pnp1/3PN3/Pp2P3/2N2Q1p/1PPBBPPP/R3K2R b KQkq a3 0 1", move, Ply{0});
+  }
+
+  template <Node::Context context>
+    requires(!context.can_en_passant)
+  constexpr void visit_pawn_move(const QuietMove& move) const noexcept {
+    visit<context>("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P1P1/2N2Q1p/PPPBBP1P/R3K2R b KQkq - 0 1", move, Ply{0});
   }
 
   template <Node::Context context, typename Move>
@@ -62,10 +72,9 @@ class Visitor : public move_generator::Visitor<Visitor> {
 
  private:
   template <Node::Context context, typename Move>
-  constexpr void visit(const std::string_view fen, const Move& move, const Ply halfmove_clock,
-                       const Bitboard en_passant_target = Bitboard()) const noexcept {
+  constexpr void visit(const std::string_view fen, const Move& move, const Ply halfmove_clock) const noexcept {
     INFO(fen);
-    const auto undo = scoped_move(node_, move, en_passant_target);
+    const auto undo = scoped_move<context.can_en_passant>(node_, move);
     REQUIRE(to_position<context>(node_, halfmove_clock) == parse_fen(fen).value());
   }
 
@@ -76,14 +85,19 @@ TEST_CASE("scoped_move") {
   const auto position = parse_fen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1").value();
   dispatch(position, [&]<auto context>(auto node) {
     const Visitor visitor(node);
-    visitor.visit_pawn_move<context.enable_en_passant()>(
-        QuietMove{
-            .origin = to_bitboard(Square::A2),
-            .target = to_bitboard(Square::A4),
-            .side_to_move = Color::WHITE,
-            .piece_type = PieceType::PAWN,
-        },
-        to_bitboard(Square::A3));
+    visitor.visit_pawn_move<context.enable_en_passant()>(QuietMove{
+        .origin = to_bitboard(Square::A2),
+        .target = to_bitboard(Square::A4),
+        .side_to_move = Color::WHITE,
+        .piece_type = PieceType::PAWN,
+    });
+    REQUIRE(to_position<context>(node, Ply{0}) == position);
+    visitor.visit_pawn_move<context.move(context.castling_rights)>(QuietMove{
+        .origin = to_bitboard(Square::G2),
+        .target = to_bitboard(Square::G4),
+        .side_to_move = Color::WHITE,
+        .piece_type = PieceType::PAWN,
+    });
     REQUIRE(to_position<context>(node, Ply{0}) == position);
     visitor.visit_pawn_move<context.move(context.castling_rights)>(Capture{
         .origin = to_bitboard(Square::G2),

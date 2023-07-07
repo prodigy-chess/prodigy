@@ -143,7 +143,7 @@ constexpr std::pair<Bitboard, Bitboard> make_pinned_and_unpinned(const Board& bo
 template <Color side_to_move>
 constexpr void walk_pawn_pushes(const Board& board, const Bitboard dg_pin_mask, const Bitboard hv_pin_mask,
                                 const auto& visit_single_push,
-                                const std::invocable<const QuietMove&, Bitboard> auto& visit_double_push,
+                                const std::invocable<const QuietMove&> auto& visit_double_push,
                                 const std::same_as<Bitboard> auto... check_mask) {
   const auto walk_pushes = [&, empty = ~board.occupancy()](const auto origins, const auto... target_mask) {
     const auto unmasked_single_push_targets = pawn_single_push_set(side_to_move, origins) & empty;
@@ -172,15 +172,12 @@ constexpr void walk_pawn_pushes(const Board& board, const Bitboard dg_pin_mask, 
                              unmasked_single_push_targets & ColorTraits<side_to_move>::EN_PASSANT_TARGET_RANK) &
         (empty & ... & target_mask);
     for_each_bit(double_push_targets, [&](const auto target) {
-      const auto en_passant_target = pawn_single_push_origin(side_to_move, target);
-      visit_double_push(
-          QuietMove{
-              .origin = pawn_single_push_origin(side_to_move, en_passant_target),
-              .target = target,
-              .side_to_move = side_to_move,
-              .piece_type = PieceType::PAWN,
-          },
-          en_passant_target);
+      visit_double_push(QuietMove{
+          .origin = pawn_single_push_origin(side_to_move, pawn_single_push_origin(side_to_move, target)),  // FIXME
+          .target = target,
+          .side_to_move = side_to_move,
+          .piece_type = PieceType::PAWN,
+      });
     });
   };
   const auto [pinned, unpinned] =
@@ -195,29 +192,27 @@ template <Color side_to_move>
 void walk_en_passants(const Node& node, const Bitboard dg_pin_mask, const Bitboard dg_pinned, const Bitboard unpinned,
                       const std::invocable<const EnPassant&> auto& visit_move,
                       const std::same_as<Bitboard> auto... check_mask) {
-  const auto walk_single_direction_en_passants = [&](const auto origins, const auto& lookup_attack_set) {
-    if (const auto origin = origins & lookup_attack_set(!side_to_move, node.en_passant_target); any(origin)) {
-      // FIXME: optimize (only compute once?, pass in king_origin?)
-      if (const auto victim_origin = pawn_single_push_set(!side_to_move, node.en_passant_target);
-          empty(rook_attack_set(square_of(node.board[side_to_move, PieceType::KING]),
-                                node.board.occupancy() ^ origin ^ node.en_passant_target ^ victim_origin) &
-                (node.board[!side_to_move, PieceType::ROOK] | node.board[!side_to_move, PieceType::QUEEN]))) {
-        visit_move(EnPassant{
-            .origin = origin,
-            .target = node.en_passant_target,
-            .victim_origin = victim_origin,
-            .side_to_move = side_to_move,
-        });
+  const auto target = pawn_single_push_set(side_to_move, node.en_passant_victim_origin);
+  const auto walk_en_passants = [&](const auto origins) {
+    for (const auto direction : {Direction::EAST, Direction::WEST}) {
+      if (const auto origin = origins & shift(node.en_passant_victim_origin, direction); any(origin)) {
+        // FIXME: optimize (only compute once?, pass in king_origin?, assume at least one origin exists?)
+        if (empty(rook_attack_set(square_of(node.board[side_to_move, PieceType::KING]),
+                                  node.board.occupancy() ^ origin ^ target ^ node.en_passant_victim_origin) &
+                  (node.board[!side_to_move, PieceType::ROOK] | node.board[!side_to_move, PieceType::QUEEN]))) {
+          visit_move(EnPassant{
+              .origin = origin,
+              .target = target,
+              .victim_origin = node.en_passant_victim_origin,
+              .side_to_move = side_to_move,
+          });
+        }
       }
     }
   };
-  const auto walk_en_passants = [&](const auto origins) {
-    walk_single_direction_en_passants(origins, pawn_left_attack_set);
-    walk_single_direction_en_passants(origins, pawn_right_attack_set);
-  };
   walk_en_passants(unpinned);
   if constexpr (sizeof...(check_mask) == 0) {
-    if (any(dg_pin_mask & node.en_passant_target)) {
+    if (any(dg_pin_mask & target)) {
       walk_en_passants(dg_pinned);
     }
   }
@@ -274,7 +269,7 @@ constexpr void walk_pawn_captures(const Node& node, const Bitboard dg_pin_mask, 
 template <Node::Context context>
 void walk_pawn_moves(const Node& node, const Bitboard dg_pin_mask, const Bitboard hv_pin_mask,
                      const auto& visit_single_push_or_capture,
-                     const std::invocable<const QuietMove&, Bitboard> auto& visit_double_push,
+                     const std::invocable<const QuietMove&> auto& visit_double_push,
                      const std::same_as<Bitboard> auto... check_mask) {
   walk_pawn_pushes<context.side_to_move>(
       node.board, dg_pin_mask, hv_pin_mask,
@@ -312,8 +307,11 @@ void walk_non_king_moves(const Node& node, const Square king_origin, Visitor<T>&
       [&]<auto new_castling_rights>(const auto& move) {
         visitor.template visit_pawn_move<context.move(new_castling_rights)>(move);
       },
-      [&](const QuietMove& double_push, const Bitboard en_passant_target) {
-        visitor.template visit_pawn_move<context.enable_en_passant()>(double_push, en_passant_target);
+      [&](const QuietMove& double_push) {
+        any(node.board[!context.side_to_move, PieceType::PAWN] &
+            (shift(double_push.target, Direction::EAST) | shift(double_push.target, Direction::WEST)))
+            ? visitor.template visit_pawn_move<context.enable_en_passant()>(double_push)
+            : visitor.template visit_pawn_move<context.move(context.castling_rights)>(double_push);
       },
       check_mask...);
   walk_piece_moves<context.side_to_move, context.castling_rights, PieceType::KNIGHT>(

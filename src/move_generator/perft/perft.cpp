@@ -19,11 +19,6 @@ class Visitor : public move_generator::Visitor<Visitor<depth>> {
   constexpr explicit Visitor(Node& node, std::uint64_t& leaf_node_count) noexcept
       : node_(node), leaf_node_count_(leaf_node_count) {}
 
-  template <Node::Context context>
-  constexpr void visit_pawn_move(const QuietMove& double_push, const Bitboard en_passant_target) const noexcept {
-    visit<context>(double_push, en_passant_target);
-  }
-
   template <Node::Context context, typename Move>
   constexpr void visit_pawn_move(const Move& move) const noexcept {
     visit<context>(move);
@@ -56,11 +51,11 @@ class Visitor : public move_generator::Visitor<Visitor<depth>> {
 
  private:
   template <Node::Context context, typename Move>
-  constexpr void visit(const Move& move, const Bitboard en_passant_target = Bitboard()) const noexcept {
+  constexpr void visit(const Move& move) const noexcept {
     if constexpr (depth == Ply{0}) {
       ++leaf_node_count_;
     } else {
-      const auto undo = this->scoped_move(node_, move, en_passant_target);
+      const auto undo = this->template scoped_move<context.can_en_passant>(node_, move);
       walk<context>(node_, Visitor<Ply{std::to_underlying(depth) - 1}>(node_, leaf_node_count_));
     }
   }

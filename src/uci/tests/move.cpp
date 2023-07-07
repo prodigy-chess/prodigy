@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
+#include <concepts>
 #include <optional>
-#include <type_traits>
 
 import prodigy.core;
 import prodigy.uci;
@@ -11,7 +11,7 @@ template <auto value>
 void validate() {
   STATIC_REQUIRE(to_move(value) == [] {
     Move move;
-    if constexpr (std::is_same_v<decltype(value), Castle>) {
+    if constexpr (std::same_as<decltype(value), Castle>) {
       move.origin = square_of(value.king_origin);
       move.target = square_of(value.king_target);
     } else {
