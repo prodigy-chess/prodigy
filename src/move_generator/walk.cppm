@@ -173,7 +173,7 @@ constexpr void walk_pawn_pushes(const Board& board, const Bitboard dg_pin_mask, 
         (empty & ... & target_mask);
     for_each_bit(double_push_targets, [&](const auto target) {
       visit_double_push(QuietMove{
-          .origin = pawn_single_push_origin(side_to_move, pawn_single_push_origin(side_to_move, target)),  // FIXME
+          .origin = pawn_single_push_origin(side_to_move, pawn_single_push_origin(side_to_move, target)),
           .target = target,
           .side_to_move = side_to_move,
           .piece_type = PieceType::PAWN,
@@ -195,18 +195,17 @@ void walk_en_passants(const Node& node, const Bitboard dg_pin_mask, const Bitboa
   const auto target = pawn_single_push_set(side_to_move, node.en_passant_victim_origin);
   const auto walk_en_passants = [&](const auto origins) {
     for (const auto direction : {Direction::EAST, Direction::WEST}) {
-      if (const auto origin = origins & shift(node.en_passant_victim_origin, direction); any(origin)) {
-        // FIXME: optimize (only compute once?, pass in king_origin?, assume at least one origin exists?)
-        if (empty(rook_attack_set(square_of(node.board[side_to_move, PieceType::KING]),
-                                  node.board.occupancy() ^ origin ^ target ^ node.en_passant_victim_origin) &
-                  (node.board[!side_to_move, PieceType::ROOK] | node.board[!side_to_move, PieceType::QUEEN]))) {
-          visit_move(EnPassant{
-              .origin = origin,
-              .target = target,
-              .victim_origin = node.en_passant_victim_origin,
-              .side_to_move = side_to_move,
-          });
-        }
+      if (const auto origin = origins & shift(node.en_passant_victim_origin, direction);
+          any(origin) &&
+          empty(rook_attack_set(square_of(node.board[side_to_move, PieceType::KING]),
+                                node.board.occupancy() ^ target ^ node.en_passant_victim_origin ^ origin) &
+                (node.board[!side_to_move, PieceType::ROOK] | node.board[!side_to_move, PieceType::QUEEN]))) {
+        visit_move(EnPassant{
+            .origin = origin,
+            .target = target,
+            .victim_origin = node.en_passant_victim_origin,
+            .side_to_move = side_to_move,
+        });
       }
     }
   };

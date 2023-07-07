@@ -5,7 +5,3 @@ CI:
 Tooling:
 - clang-tidy
 - coverage
-
-Chess:
-- walk: try per-side en passant capture
-- FIXMEs
