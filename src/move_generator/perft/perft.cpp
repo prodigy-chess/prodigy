@@ -3,6 +3,7 @@ module;
 #include <array>
 #include <cstdint>
 #include <expected>
+#include <map>
 #include <string_view>
 #include <utility>
 
@@ -10,14 +11,16 @@ module prodigy.move_generator.perft;
 
 import prodigy.core;
 import prodigy.move_generator;
+import prodigy.uci;
 
 namespace prodigy::move_generator::perft {
 namespace {
-template <Ply depth>
-class Visitor : public move_generator::Visitor<Visitor<depth>> {
+constexpr Ply decrement(const Ply ply) noexcept { return static_cast<Ply>(std::to_underlying(ply) - 1); }
+
+template <typename Derived, typename SubVisitor>
+class Visitor : public move_generator::Visitor<Visitor<Derived, SubVisitor>> {
  public:
-  constexpr explicit Visitor(Node& node, std::uint64_t& leaf_node_count) noexcept
-      : node_(node), leaf_node_count_(leaf_node_count) {}
+  constexpr explicit Visitor(Node& node, const Ply depth) noexcept : node_(node), depth_(depth) {}
 
   template <Node::Context context, typename Move>
   constexpr void visit_pawn_move(const Move& move) const noexcept {
@@ -52,39 +55,66 @@ class Visitor : public move_generator::Visitor<Visitor<depth>> {
  private:
   template <Node::Context context, typename Move>
   constexpr void visit(const Move& move) const noexcept {
-    if constexpr (depth == Ply{0}) {
-      ++leaf_node_count_;
+    if (auto& leaf_node_count = static_cast<const Derived&>(*this).leaf_node_count(move); depth_ == Ply{0}) {
+      ++leaf_node_count;
     } else {
       const auto undo = this->template scoped_move<context.can_en_passant>(node_, move);
-      walk<context>(node_, Visitor<Ply{std::to_underlying(depth) - 1}>(node_, leaf_node_count_));
+      walk<context>(node_, SubVisitor(node_, decrement(depth_), leaf_node_count));
     }
   }
 
   Node& node_;
+  const Ply depth_;
+};
+
+class Perft : public Visitor<Perft, Perft> {
+ public:
+  constexpr explicit Perft(Node& node, const Ply depth, std::uint64_t& leaf_node_count) noexcept
+      : Visitor(node, depth), leaf_node_count_(leaf_node_count) {}
+
+  template <typename Move>
+  std::uint64_t& leaf_node_count(const Move&) const noexcept {
+    return leaf_node_count_;
+  }
+
+ private:
   std::uint64_t& leaf_node_count_;
 };
+
+class Divide : public Visitor<Divide, Perft> {
+ public:
+  constexpr explicit Divide(Node& node, const Ply depth,
+                            std::map<uci::Move, std::uint64_t>& move_to_leaf_node_count) noexcept
+      : Visitor(node, depth), move_to_leaf_node_count_(move_to_leaf_node_count) {}
+
+  template <typename Move>
+  std::uint64_t& leaf_node_count(const Move& move) const noexcept {
+    return move_to_leaf_node_count_[uci::to_move(move)];
+  }
+
+ private:
+  std::map<uci::Move, std::uint64_t>& move_to_leaf_node_count_;
+};
+
+template <typename Visitor, typename T>
+std::expected<T, std::string_view> perft(const Position& position, const Ply depth) noexcept {
+  if (depth == Ply{0}) {
+    return std::unexpected("Invalid depth.");
+  }
+  return dispatch(position, [&]<auto context>(auto node) {
+    T value{};
+    walk<context>(node, Visitor(node, decrement(depth), value));
+    return value;
+  });
+}
 }  // namespace
 
-std::expected<std::uint64_t, std::string_view> perft(const Position& position, const Ply depth) {
-  switch (std::to_underlying(depth)) {
-#define _(DEPTH)                                                           \
-  case DEPTH:                                                              \
-    return dispatch(position, []<auto context>(auto node) {                \
-      std::uint64_t leaf_node_count = 0;                                   \
-      walk<context>(node, Visitor<Ply{DEPTH - 1}>(node, leaf_node_count)); \
-      return leaf_node_count;                                              \
-    })
-    _(1);
-    _(2);
-    _(3);
-    _(4);
-    _(5);
-    _(6);
-    _(7);
-    _(8);
-#undef _
-    default:
-      return std::unexpected("Invalid depth.");
-  }
+std::expected<std::uint64_t, std::string_view> perft(const Position& position, const Ply depth) noexcept {
+  return perft<Perft, std::uint64_t>(position, depth);
+}
+
+std::expected<std::map<uci::Move, std::uint64_t>, std::string_view> divide(const Position& position,
+                                                                           const Ply depth) noexcept {
+  return perft<Divide, std::map<uci::Move, std::uint64_t>>(position, depth);
 }
 }  // namespace prodigy::move_generator::perft

@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <concepts>
 #include <optional>
+#include <sstream>
 
 import prodigy.core;
 import prodigy.uci;
@@ -59,6 +60,24 @@ TEST_CASE("to_move") {
       .victim_origin = to_bitboard(Square::D5),
       .side_to_move = Color::WHITE,
   }>();
+}
+
+TEST_CASE("output stream") {
+  REQUIRE("e7e6" == (std::ostringstream() << to_move(QuietMove{
+                         .origin = to_bitboard(Square::E7),
+                         .target = to_bitboard(Square::E6),
+                         .side_to_move = Color::BLACK,
+                         .piece_type = PieceType::PAWN,
+                     }))
+                        .str());
+  REQUIRE("d7e8q" == (std::ostringstream() << to_move(CapturePromotion{
+                          .origin = to_bitboard(Square::D7),
+                          .target = to_bitboard(Square::E8),
+                          .side_to_move = Color::WHITE,
+                          .promotion = PieceType::QUEEN,
+                          .victim = PieceType::ROOK,
+                      }))
+                         .str());
 }
 }  // namespace
 }  // namespace prodigy::uci

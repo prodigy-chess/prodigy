@@ -3,6 +3,7 @@ module;
 #include <concepts>
 #include <iosfwd>
 #include <optional>
+#include <tuple>
 
 export module prodigy.uci:move;
 
@@ -13,6 +14,10 @@ struct Move {
   Square origin;
   Square target;
   std::optional<PieceType> promotion;
+
+  friend constexpr auto operator<=>(const Move lhs, const Move rhs) noexcept {
+    return std::tie(lhs.origin, lhs.target, lhs.promotion) <=> std::tie(rhs.origin, rhs.target, rhs.promotion);
+  }
 
   friend consteval bool operator==(Move, Move) = default;
 };
