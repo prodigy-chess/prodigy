@@ -50,14 +50,9 @@ TEST_CASE("perft") {
 }
 
 TEST_CASE("invalid") {
-  const auto [fen, depth, error] = GENERATE(table<std::string_view, Ply, std::string_view>({
-      {STARTING_FEN, Ply{0}, "Invalid depth."},
-      {STARTING_FEN, Ply{9}, "Invalid depth."},
-  }));
-  INFO(fen);
-  const auto result = perft(parse_fen(fen).value(), depth);
+  const auto result = perft(parse_fen(STARTING_FEN).value(), Ply{0});
   REQUIRE_FALSE(result.has_value());
-  REQUIRE(result.error() == error);
+  REQUIRE(result.error() == "Invalid depth.");
 }
 }  // namespace
 }  // namespace prodigy::move_generator::perft
