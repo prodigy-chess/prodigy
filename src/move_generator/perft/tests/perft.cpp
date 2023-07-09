@@ -22,7 +22,10 @@ TEST_CASE("perft") {
       {"r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", Ply{6}, 6'923'051'137},
       {"rnbQkbnr/3ppppp/p1p5/8/8/2P5/PP1PPPPP/RNB1KBNR b KQkq - 0 4", Ply{7}, 67'820'026},
       {"n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1", Ply{6}, 71'179'139},
-      {"3k4/3p4/8/K1P4r/8/8/8/8 b - - 0 1", Ply{6}, 1'134'888},           // illegal unpinned en passant
+      {"8/ppp3p1/8/8/3p4/5Q2/1ppp2K1/brk4n w - - 0 1", Ply{4}, 134'167},
+      {"8/6kR/8/8/8/bq6/1rqqqqqq/K1nqnbrq b - - 0 1", Ply{4}, 50'268},
+      {"8/8/8/k7/2p5/8/3P4/4b2K w - - 0 1", Ply{6}, 318'300},             // illegal unpinned en passant in check
+      {"3k4/3p4/8/K1P4r/8/8/8/8 b - - 0 1", Ply{6}, 1'134'888},           // illegal unpinned en passant into check
       {"8/8/4k3/8/2p5/8/B2P2K1/8 w - - 0 1", Ply{6}, 1'015'133},          // illegal pinned en passant
       {"8/8/1k6/2b5/2pP4/8/5K2/8 b - d3 0 1", Ply{6}, 1'440'467},         // en passant into check
       {"5k2/8/8/8/8/8/8/4K2R w K - 0 1", Ply{6}, 661'072},                // kingside castle into check

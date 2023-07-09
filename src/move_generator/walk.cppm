@@ -209,11 +209,13 @@ void walk_en_passants(const Node& node, const Bitboard dg_pin_mask, const Bitboa
       }
     }
   };
-  walk_en_passants(unpinned);
   if constexpr (sizeof...(check_mask) == 0) {
+    walk_en_passants(unpinned);
     if (any(dg_pin_mask & target)) {
       walk_en_passants(dg_pinned);
     }
+  } else if (any(((target | node.en_passant_victim_origin) & ... & check_mask))) {
+    walk_en_passants(unpinned);
   }
 }
 
