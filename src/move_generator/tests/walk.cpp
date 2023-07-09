@@ -496,6 +496,14 @@ TEST_CASE("walk") {
               .king_quiet_moves = 5,
           },
       },
+      {
+          "8/8/8/k7/2pP4/8/8/4B2K b - d3 0 1",
+          "can't en passant capture without check evasion",
+          {
+              .pawn_single_pushes = 1,
+              .king_quiet_moves = 4,
+          },
+      },
   }));
   static_cast<void>(init());
   INFO(fen);
