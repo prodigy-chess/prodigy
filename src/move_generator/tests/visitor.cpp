@@ -40,39 +40,39 @@ class Visitor : public move_generator::Visitor<Visitor> {
     visit<context>("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P1P1/2N2Q1p/PPPBBP1P/R3K2R b KQkq - 0 1", move, Ply{0});
   }
 
-  template <Node::Context context, typename Move>
-  constexpr void visit_pawn_move(const Move& move) const noexcept {
+  template <Node::Context context>
+  constexpr void visit_pawn_move(const auto& move) const noexcept {
     visit<context>("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1P/PPPBBP1P/R3K2R b KQkq - 0 1", move, Ply{0});
   }
 
-  template <Node::Context context, typename Move>
-  constexpr void visit_knight_move(const Move& move) const noexcept {
+  template <Node::Context context>
+  constexpr void visit_knight_move(const auto& move) const noexcept {
     visit<context>("r3k2r/p1ppqNb1/bn2pnp1/3P4/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1", move, Ply{0});
   }
 
-  template <Node::Context context, typename Move>
-  constexpr void visit_bishop_move(const Move& move) const noexcept {
+  template <Node::Context context>
+  constexpr void visit_bishop_move(const auto& move) const noexcept {
     visit<context>("r3k2r/p1ppqpb1/Bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPB1PPP/R3K2R b KQkq - 0 1", move, Ply{0});
   }
 
-  template <Node::Context context, typename Move>
-  constexpr void visit_rook_move(const Move& move) const noexcept {
+  template <Node::Context context>
+  constexpr void visit_rook_move(const auto& move) const noexcept {
     visit<context>("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/1R2K2R b Kkq - 1 1", move, Ply{1});
   }
 
-  template <Node::Context context, typename Move>
-  constexpr void visit_queen_move(const Move& move) const noexcept {
+  template <Node::Context context>
+  constexpr void visit_queen_move(const auto& move) const noexcept {
     visit<context>("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N4Q/PPPBBPPP/R3K2R b KQkq - 0 1", move, Ply{0});
   }
 
-  template <Node::Context context, typename Move>
-  constexpr void visit_king_move(const Move& move) const noexcept {
+  template <Node::Context context>
+  constexpr void visit_king_move(const auto& move) const noexcept {
     visit<context>("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R4RK1 b kq - 1 1", move, Ply{1});
   }
 
  private:
-  template <Node::Context context, typename Move>
-  constexpr void visit(const std::string_view fen, const Move& move, const Ply halfmove_clock) const noexcept {
+  template <Node::Context context>
+  constexpr void visit(const std::string_view fen, const auto& move, const Ply halfmove_clock) const noexcept {
     INFO(fen);
     const auto undo = scoped_move<context.can_en_passant>(node_, move);
     REQUIRE(to_position<context>(node_, halfmove_clock) == parse_fen(fen).value());
