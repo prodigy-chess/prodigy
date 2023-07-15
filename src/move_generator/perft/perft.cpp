@@ -22,39 +22,39 @@ class Visitor : public move_generator::Visitor<Visitor<Derived, SubVisitor>> {
  public:
   constexpr explicit Visitor(Node& node, const Ply depth) noexcept : node_(node), depth_(depth) {}
 
-  template <Node::Context context, typename Move>
-  constexpr void visit_pawn_move(const Move& move) const noexcept {
+  template <Node::Context context>
+  constexpr void visit_pawn_move(const auto& move) const noexcept {
     visit<context>(move);
   }
 
-  template <Node::Context context, typename Move>
-  constexpr void visit_knight_move(const Move& move) const noexcept {
+  template <Node::Context context>
+  constexpr void visit_knight_move(const auto& move) const noexcept {
     visit<context>(move);
   }
 
-  template <Node::Context context, typename Move>
-  constexpr void visit_bishop_move(const Move& move) const noexcept {
+  template <Node::Context context>
+  constexpr void visit_bishop_move(const auto& move) const noexcept {
     visit<context>(move);
   }
 
-  template <Node::Context context, typename Move>
-  constexpr void visit_rook_move(const Move& move) const noexcept {
+  template <Node::Context context>
+  constexpr void visit_rook_move(const auto& move) const noexcept {
     visit<context>(move);
   }
 
-  template <Node::Context context, typename Move>
-  constexpr void visit_queen_move(const Move& move) const noexcept {
+  template <Node::Context context>
+  constexpr void visit_queen_move(const auto& move) const noexcept {
     visit<context>(move);
   }
 
-  template <Node::Context context, typename Move>
-  constexpr void visit_king_move(const Move& move) const noexcept {
+  template <Node::Context context>
+  constexpr void visit_king_move(const auto& move) const noexcept {
     visit<context>(move);
   }
 
  private:
-  template <Node::Context context, typename Move>
-  constexpr void visit(const Move& move) const noexcept {
+  template <Node::Context context>
+  constexpr void visit(const auto& move) const noexcept {
     if (auto& leaf_node_count = static_cast<const Derived&>(*this).leaf_node_count(move); depth_ == Ply{0}) {
       ++leaf_node_count;
     } else {
@@ -72,10 +72,7 @@ class Perft : public Visitor<Perft, Perft> {
   constexpr explicit Perft(Node& node, const Ply depth, std::uint64_t& leaf_node_count) noexcept
       : Visitor(node, depth), leaf_node_count_(leaf_node_count) {}
 
-  template <typename Move>
-  std::uint64_t& leaf_node_count(const Move&) const noexcept {
-    return leaf_node_count_;
-  }
+  std::uint64_t& leaf_node_count(const auto&) const noexcept { return leaf_node_count_; }
 
  private:
   std::uint64_t& leaf_node_count_;
@@ -87,8 +84,7 @@ class Divide : public Visitor<Divide, Perft> {
                             std::map<uci::Move, std::uint64_t>& move_to_leaf_node_count) noexcept
       : Visitor(node, depth), move_to_leaf_node_count_(move_to_leaf_node_count) {}
 
-  template <typename Move>
-  std::uint64_t& leaf_node_count(const Move& move) const noexcept {
+  std::uint64_t& leaf_node_count(const auto& move) const noexcept {
     return move_to_leaf_node_count_[uci::to_move(move)];
   }
 
