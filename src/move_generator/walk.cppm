@@ -73,7 +73,7 @@ template <Color side_to_move, CastlingRights castling_rights, PieceType side>
 constexpr void walk_castle(const Board& board, const Bitboard king_danger_set, const auto& visit_move) {
   if constexpr (using CastlingTraits = ColorTraits<side_to_move>::template CastlingTraits<side>;
                 any(castling_rights & CastlingTraits::CASTLING_RIGHTS)) {
-    static constexpr auto& castle = CastlingTraits::CASTLE;
+    static constexpr auto castle = CastlingTraits::CASTLE;
     if (static constexpr auto rook_path =
             half_open_segment(square_of(castle.rook_target), square_of(castle.rook_origin));
         empty(board.occupancy() & rook_path) &&
