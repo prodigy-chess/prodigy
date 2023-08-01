@@ -19,7 +19,7 @@ struct Move {
     return std::tie(lhs.origin, lhs.target, lhs.promotion) <=> std::tie(rhs.origin, rhs.target, rhs.promotion);
   }
 
-  friend consteval bool operator==(Move, Move) = default;
+  friend constexpr bool operator==(Move, Move) = default;
 };
 
 template <typename T>
