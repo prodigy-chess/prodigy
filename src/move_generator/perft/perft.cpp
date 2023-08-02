@@ -58,7 +58,7 @@ class Visitor : public move_generator::Visitor<Visitor<Derived, SubVisitor>> {
     if (auto& leaf_node_count = static_cast<const Derived&>(*this).leaf_node_count(move); depth_ == Ply{0}) {
       ++leaf_node_count;
     } else {
-      const auto undo = this->template scoped_move<context.can_en_passant>(node_, move);
+      const auto undo = this->template scoped_move<!context.side_to_move, context.can_en_passant>(node_, move);
       walk<context>(node_, SubVisitor(node_, decrement(depth_), leaf_node_count));
     }
   }

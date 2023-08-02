@@ -35,22 +35,25 @@ class Board {
 
   constexpr Bitboard occupancy() const noexcept { return occupancy_; }
 
+  template <Color side_to_move>
   constexpr void apply(const QuietMove& move) noexcept {
-    const auto& [origin, target, side_to_move, piece_type] = move;
+    const auto& [origin, target, piece_type] = move;
     const auto mask = origin | target;
-    toggle(side_to_move, piece_type, mask);
+    toggle<side_to_move>(piece_type, mask);
     occupancy_ ^= mask;
   }
 
+  template <Color side_to_move>
   constexpr void apply(const Capture& move) noexcept {
-    const auto& [origin, target, side_to_move, aggressor, victim] = move;
-    toggle(side_to_move, aggressor, origin | target);
-    toggle(!side_to_move, victim, target);
+    const auto& [origin, target, aggressor, victim] = move;
+    toggle<side_to_move>(aggressor, origin | target);
+    toggle<!side_to_move>(victim, target);
     occupancy_ ^= origin;
   }
 
+  template <Color side_to_move>
   constexpr void apply(const Castle& move) noexcept {
-    const auto& [king_origin, king_target, rook_origin, rook_target, side_to_move] = move;
+    const auto& [king_origin, king_target, rook_origin, rook_target] = move;
     const auto king_mask = king_origin | king_target;
     pieces_[side_to_move][PieceType::KING] ^= king_mask;
     const auto rook_mask = rook_origin | rook_target;
@@ -60,8 +63,9 @@ class Board {
     occupancy_ ^= color_mask;
   }
 
+  template <Color side_to_move>
   constexpr void apply(const QuietPromotion& move) noexcept {
-    const auto& [origin, target, side_to_move, promotion] = move;
+    const auto& [origin, target, promotion] = move;
     pieces_[side_to_move][PieceType::PAWN] ^= origin;
     pieces_[side_to_move][promotion] ^= target;
     const auto color_mask = origin | target;
@@ -69,31 +73,33 @@ class Board {
     occupancy_ ^= color_mask;
   }
 
+  template <Color side_to_move>
   constexpr void apply(const CapturePromotion& move) noexcept {
-    const auto& [origin, target, side_to_move, promotion, victim] = move;
+    const auto& [origin, target, promotion, victim] = move;
     pieces_[side_to_move][PieceType::PAWN] ^= origin;
     pieces_[side_to_move][promotion] ^= target;
     colors_[side_to_move] ^= origin | target;
-    toggle(!side_to_move, victim, target);
+    toggle<!side_to_move>(victim, target);
     occupancy_ ^= origin;
   }
 
+  template <Color side_to_move>
   constexpr void apply(const EnPassant& move) noexcept {
-    const auto& [origin, target, victim_origin, side_to_move] = move;
-    apply({
+    const auto& [origin, target, victim_origin] = move;
+    apply<side_to_move>({
         .origin = origin,
         .target = target,
-        .side_to_move = side_to_move,
         .piece_type = PieceType::PAWN,
     });
-    toggle(!side_to_move, PieceType::PAWN, victim_origin);
+    toggle<!side_to_move>(PieceType::PAWN, victim_origin);
     occupancy_ ^= victim_origin;
   }
 
-  friend constexpr bool operator==(const Board&, const Board&) = default;
+  friend constexpr bool operator==(const Board& lhs, const Board& rhs) noexcept { return lhs.pieces_ == rhs.pieces_; }
 
  private:
-  constexpr void toggle(const Color color, const PieceType piece_type, const Bitboard mask) noexcept {
+  template <Color color>
+  constexpr void toggle(const PieceType piece_type, const Bitboard mask) noexcept {
     pieces_[color][piece_type] ^= mask;
     colors_[color] ^= mask;
   }

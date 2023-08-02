@@ -65,17 +65,17 @@ class Visitor {
   explicit AutoUndo(Undo&&) -> AutoUndo<Undo>;
 
  protected:
-  template <bool can_en_passant, typename Move>
+  template <Color side_to_move, bool can_en_passant, typename Move>
   static constexpr auto scoped_move(Node& node, const Move& move) noexcept {
-    node.board.apply(move);
+    node.board.apply<side_to_move>(move);
     if constexpr (can_en_passant) {
       static_assert(std::same_as<Move, QuietMove>);
       return AutoUndo([&, en_passant_victim_origin = std::exchange(node.en_passant_victim_origin, move.target)] {
-        node.board.apply(move);
+        node.board.apply<side_to_move>(move);
         node.en_passant_victim_origin = en_passant_victim_origin;
       });
     } else {
-      return AutoUndo([&] { node.board.apply(move); });
+      return AutoUndo([&] { node.board.apply<side_to_move>(move); });
     }
   }
 };

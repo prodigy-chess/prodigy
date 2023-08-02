@@ -30,13 +30,11 @@ TEST_CASE("to_move") {
   validate<QuietMove{
       .origin = to_bitboard(Square::E2),
       .target = to_bitboard(Square::E4),
-      .side_to_move = Color::WHITE,
       .piece_type = PieceType::PAWN,
   }>();
   validate<Capture{
       .origin = to_bitboard(Square::E4),
       .target = to_bitboard(Square::D5),
-      .side_to_move = Color::WHITE,
       .aggressor = PieceType::PAWN,
       .victim = PieceType::PAWN,
   }>();
@@ -44,13 +42,11 @@ TEST_CASE("to_move") {
   validate<QuietPromotion{
       .origin = to_bitboard(Square::E7),
       .target = to_bitboard(Square::E8),
-      .side_to_move = Color::WHITE,
       .promotion = PieceType::QUEEN,
   }>();
   validate<CapturePromotion{
       .origin = to_bitboard(Square::E7),
       .target = to_bitboard(Square::D8),
-      .side_to_move = Color::WHITE,
       .promotion = PieceType::QUEEN,
       .victim = PieceType::KNIGHT,
   }>();
@@ -58,7 +54,6 @@ TEST_CASE("to_move") {
       .origin = to_bitboard(Square::E5),
       .target = to_bitboard(Square::D6),
       .victim_origin = to_bitboard(Square::D5),
-      .side_to_move = Color::WHITE,
   }>();
 }
 
@@ -66,14 +61,12 @@ TEST_CASE("output stream") {
   REQUIRE("e7e6" == (std::ostringstream() << to_move(QuietMove{
                          .origin = to_bitboard(Square::E7),
                          .target = to_bitboard(Square::E6),
-                         .side_to_move = Color::BLACK,
                          .piece_type = PieceType::PAWN,
                      }))
                         .str());
   REQUIRE("d7e8q" == (std::ostringstream() << to_move(CapturePromotion{
                           .origin = to_bitboard(Square::D7),
                           .target = to_bitboard(Square::E8),
-                          .side_to_move = Color::WHITE,
                           .promotion = PieceType::QUEEN,
                           .victim = PieceType::ROOK,
                       }))

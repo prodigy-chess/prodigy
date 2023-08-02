@@ -86,11 +86,10 @@ TEST_CASE("quiet move") {
   static constexpr auto before =
       parse_fen("rnbqkbnr/1pp2ppp/3p4/p3p3/4P2P/5P2/PPPP2P1/RNBQKBNR w KQkq - 0 4").value().board;
   {
-    static constexpr auto move = [](auto board) {
-      board.apply({
+    static constexpr auto move = [](Board board) {
+      board.apply<Color::WHITE>({
           .origin = to_bitboard(Square::G2),
           .target = to_bitboard(Square::G3),
-          .side_to_move = Color::WHITE,
           .piece_type = PieceType::PAWN,
       });
       return board;
@@ -101,11 +100,10 @@ TEST_CASE("quiet move") {
     STATIC_REQUIRE(move(pawn_single_push) == before);
   }
   {
-    static constexpr auto move = [](auto board) {
-      board.apply({
+    static constexpr auto move = [](Board board) {
+      board.apply<Color::WHITE>({
           .origin = to_bitboard(Square::G2),
           .target = to_bitboard(Square::G4),
-          .side_to_move = Color::WHITE,
           .piece_type = PieceType::PAWN,
       });
       return board;
@@ -116,11 +114,10 @@ TEST_CASE("quiet move") {
     STATIC_REQUIRE(move(pawn_double_push) == before);
   }
   {
-    static constexpr auto move = [](auto board) {
-      board.apply({
+    static constexpr auto move = [](Board board) {
+      board.apply<Color::WHITE>({
           .origin = to_bitboard(Square::G1),
           .target = to_bitboard(Square::E2),
-          .side_to_move = Color::WHITE,
           .piece_type = PieceType::KNIGHT,
       });
       return board;
@@ -131,11 +128,10 @@ TEST_CASE("quiet move") {
     STATIC_REQUIRE(move(knight_move) == before);
   }
   {
-    static constexpr auto move = [](auto board) {
-      board.apply({
+    static constexpr auto move = [](Board board) {
+      board.apply<Color::WHITE>({
           .origin = to_bitboard(Square::F1),
           .target = to_bitboard(Square::B5),
-          .side_to_move = Color::WHITE,
           .piece_type = PieceType::BISHOP,
       });
       return board;
@@ -146,11 +142,10 @@ TEST_CASE("quiet move") {
     STATIC_REQUIRE(move(bishop_move) == before);
   }
   {
-    static constexpr auto move = [](auto board) {
-      board.apply({
+    static constexpr auto move = [](Board board) {
+      board.apply<Color::WHITE>({
           .origin = to_bitboard(Square::H1),
           .target = to_bitboard(Square::H3),
-          .side_to_move = Color::WHITE,
           .piece_type = PieceType::ROOK,
       });
       return board;
@@ -161,11 +156,10 @@ TEST_CASE("quiet move") {
     STATIC_REQUIRE(move(rook_move) == before);
   }
   {
-    static constexpr auto move = [](auto board) {
-      board.apply({
+    static constexpr auto move = [](Board board) {
+      board.apply<Color::WHITE>({
           .origin = to_bitboard(Square::D1),
           .target = to_bitboard(Square::E2),
-          .side_to_move = Color::WHITE,
           .piece_type = PieceType::QUEEN,
       });
       return board;
@@ -176,11 +170,10 @@ TEST_CASE("quiet move") {
     STATIC_REQUIRE(move(queen_move) == before);
   }
   {
-    static constexpr auto move = [](auto board) {
-      board.apply({
+    static constexpr auto move = [](Board board) {
+      board.apply<Color::WHITE>({
           .origin = to_bitboard(Square::E1),
           .target = to_bitboard(Square::F2),
-          .side_to_move = Color::WHITE,
           .piece_type = PieceType::KING,
       });
       return board;
@@ -196,11 +189,10 @@ TEST_CASE("capture") {
   static constexpr auto before =
       parse_fen("r3kb1r/nppb2p1/3p4/1B1np1qp/p1K1p2P/P1P2P1N/RP1P2P1/1NBQR3 w kq - 0 14").value().board;
   {
-    static constexpr auto move = [](auto board) {
-      board.apply({
+    static constexpr auto move = [](Board board) {
+      board.apply<Color::WHITE>({
           .origin = to_bitboard(Square::F3),
           .target = to_bitboard(Square::E4),
-          .side_to_move = Color::WHITE,
           .aggressor = PieceType::PAWN,
           .victim = PieceType::PAWN,
       });
@@ -212,11 +204,10 @@ TEST_CASE("capture") {
     STATIC_REQUIRE(move(pawn_capture) == before);
   }
   {
-    static constexpr auto move = [](auto board) {
-      board.apply({
+    static constexpr auto move = [](Board board) {
+      board.apply<Color::WHITE>({
           .origin = to_bitboard(Square::H3),
           .target = to_bitboard(Square::G5),
-          .side_to_move = Color::WHITE,
           .aggressor = PieceType::KNIGHT,
           .victim = PieceType::QUEEN,
       });
@@ -228,11 +219,10 @@ TEST_CASE("capture") {
     STATIC_REQUIRE(move(knight_capture) == before);
   }
   {
-    static constexpr auto move = [](auto board) {
-      board.apply({
+    static constexpr auto move = [](Board board) {
+      board.apply<Color::WHITE>({
           .origin = to_bitboard(Square::B5),
           .target = to_bitboard(Square::D7),
-          .side_to_move = Color::WHITE,
           .aggressor = PieceType::BISHOP,
           .victim = PieceType::BISHOP,
       });
@@ -244,11 +234,10 @@ TEST_CASE("capture") {
     STATIC_REQUIRE(move(bishop_capture) == before);
   }
   {
-    static constexpr auto move = [](auto board) {
-      board.apply({
+    static constexpr auto move = [](Board board) {
+      board.apply<Color::WHITE>({
           .origin = to_bitboard(Square::E1),
           .target = to_bitboard(Square::E4),
-          .side_to_move = Color::WHITE,
           .aggressor = PieceType::ROOK,
           .victim = PieceType::PAWN,
       });
@@ -260,11 +249,10 @@ TEST_CASE("capture") {
     STATIC_REQUIRE(move(rook_capture) == before);
   }
   {
-    static constexpr auto move = [](auto board) {
-      board.apply({
+    static constexpr auto move = [](Board board) {
+      board.apply<Color::WHITE>({
           .origin = to_bitboard(Square::D1),
           .target = to_bitboard(Square::A4),
-          .side_to_move = Color::WHITE,
           .aggressor = PieceType::QUEEN,
           .victim = PieceType::PAWN,
       });
@@ -276,11 +264,10 @@ TEST_CASE("capture") {
     STATIC_REQUIRE(move(queen_capture) == before);
   }
   {
-    static constexpr auto move = [](auto board) {
-      board.apply({
+    static constexpr auto move = [](Board board) {
+      board.apply<Color::WHITE>({
           .origin = to_bitboard(Square::C4),
           .target = to_bitboard(Square::D5),
-          .side_to_move = Color::WHITE,
           .aggressor = PieceType::KING,
           .victim = PieceType::KNIGHT,
       });
@@ -296,13 +283,12 @@ TEST_CASE("capture") {
 TEST_CASE("castle") {
   static constexpr auto before = parse_fen("r3k2r/1b4bq/8/8/8/8/7B/R3K2R w KQkq - 0 1").value().board;
   {
-    static constexpr auto move = [](auto board) {
-      board.apply({
+    static constexpr auto move = [](Board board) {
+      board.apply<Color::WHITE>({
           .king_origin = to_bitboard(Square::E1),
           .king_target = to_bitboard(Square::G1),
           .rook_origin = to_bitboard(Square::H1),
           .rook_target = to_bitboard(Square::F1),
-          .side_to_move = Color::WHITE,
       });
       return board;
     };
@@ -311,13 +297,12 @@ TEST_CASE("castle") {
     STATIC_REQUIRE(move(kingside_castle) == before);
   }
   {
-    static constexpr auto move = [](auto board) {
-      board.apply({
+    static constexpr auto move = [](Board board) {
+      board.apply<Color::WHITE>({
           .king_origin = to_bitboard(Square::E1),
           .king_target = to_bitboard(Square::C1),
           .rook_origin = to_bitboard(Square::A1),
           .rook_target = to_bitboard(Square::D1),
-          .side_to_move = Color::WHITE,
       });
       return board;
     };
@@ -329,11 +314,10 @@ TEST_CASE("castle") {
 
 TEST_CASE("quiet promotion") {
   static constexpr auto before = parse_fen("4k3/1P6/8/8/8/8/K7/8 w - - 0 1").value().board;
-  static constexpr auto move = [](auto board, const auto promotion) {
-    board.apply(QuietPromotion{
+  static constexpr auto move = [](Board board, const auto promotion) {
+    board.apply<Color::WHITE>(QuietPromotion{
         .origin = to_bitboard(Square::B7),
         .target = to_bitboard(Square::B8),
-        .side_to_move = Color::WHITE,
         .promotion = promotion,
     });
     return board;
@@ -362,11 +346,10 @@ TEST_CASE("quiet promotion") {
 
 TEST_CASE("capture promotion") {
   static constexpr auto before = parse_fen("2q1k3/1P6/8/8/8/8/K7/8 w - - 0 1").value().board;
-  static constexpr auto move = [](auto board, const auto promotion) {
-    board.apply({
+  static constexpr auto move = [](Board board, const auto promotion) {
+    board.apply<Color::WHITE>({
         .origin = to_bitboard(Square::B7),
         .target = to_bitboard(Square::C8),
-        .side_to_move = Color::WHITE,
         .promotion = promotion,
         .victim = PieceType::QUEEN,
     });
@@ -396,12 +379,11 @@ TEST_CASE("capture promotion") {
 
 TEST_CASE("en passant") {
   static constexpr auto before = parse_fen("8/8/1k6/2b5/2pP4/8/5K2/8 b - d3 0 1").value().board;
-  static constexpr auto move = [](auto board) {
-    board.apply({
+  static constexpr auto move = [](Board board) {
+    board.apply<Color::BLACK>({
         .origin = to_bitboard(Square::C4),
         .target = to_bitboard(Square::D3),
         .victim_origin = to_bitboard(Square::D4),
-        .side_to_move = Color::BLACK,
     });
     return board;
   };
