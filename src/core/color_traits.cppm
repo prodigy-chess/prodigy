@@ -33,7 +33,6 @@ struct CastlingTraits<Color::WHITE, PieceType::KING> {
       .king_target = to_bitboard(Square::G1),
       .rook_origin = to_bitboard(Square::H1),
       .rook_target = to_bitboard(Square::F1),
-      .side_to_move = Color::WHITE,
   };
 };
 
@@ -45,7 +44,6 @@ struct CastlingTraits<Color::WHITE, PieceType::QUEEN> {
       .king_target = to_bitboard(Square::C1),
       .rook_origin = to_bitboard(Square::A1),
       .rook_target = to_bitboard(Square::D1),
-      .side_to_move = Color::WHITE,
   };
 };
 
@@ -57,7 +55,6 @@ struct CastlingTraits<Color::BLACK, PieceType::KING> {
       .king_target = to_bitboard(Square::G8),
       .rook_origin = to_bitboard(Square::H8),
       .rook_target = to_bitboard(Square::F8),
-      .side_to_move = Color::BLACK,
   };
 };
 
@@ -69,7 +66,6 @@ struct CastlingTraits<Color::BLACK, PieceType::QUEEN> {
       .king_target = to_bitboard(Square::C8),
       .rook_origin = to_bitboard(Square::A8),
       .rook_target = to_bitboard(Square::D8),
-      .side_to_move = Color::BLACK,
   };
 };
 

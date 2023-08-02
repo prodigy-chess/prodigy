@@ -53,7 +53,6 @@ constexpr void walk_non_pawn_quiet_moves_and_captures(const Board& board, const 
     visit_move.template operator()<castling_rights>(QuietMove{
         .origin = origin,
         .target = target,
-        .side_to_move = side_to_move,
         .piece_type = piece_type,
     });
   });
@@ -62,7 +61,6 @@ constexpr void walk_non_pawn_quiet_moves_and_captures(const Board& board, const 
         visit_move.template operator()<new_castling_rights>(Capture{
             .origin = origin,
             .target = target,
-            .side_to_move = side_to_move,
             .aggressor = piece_type,
             .victim = victim,
         });
@@ -73,7 +71,7 @@ template <Color side_to_move, CastlingRights castling_rights, PieceType side>
 constexpr void walk_castle(const Board& board, const Bitboard king_danger_set, const auto& visit_move) {
   if constexpr (using CastlingTraits = ColorTraits<side_to_move>::template CastlingTraits<side>;
                 any(castling_rights & CastlingTraits::CASTLING_RIGHTS)) {
-    static constexpr auto castle = CastlingTraits::CASTLE;
+    static constexpr auto& castle = CastlingTraits::CASTLE;
     if (static constexpr auto rook_path =
             half_open_segment(square_of(castle.rook_target), square_of(castle.rook_origin));
         empty(board.occupancy() & rook_path) &&
@@ -154,7 +152,6 @@ constexpr void walk_pawn_pushes(const Board& board, const Bitboard dg_pin_mask, 
         visit_single_push(QuietPromotion{
             .origin = pawn_single_push_origin(side_to_move, target),
             .target = target,
-            .side_to_move = side_to_move,
             .promotion = promotion,
         });
       }
@@ -163,7 +160,6 @@ constexpr void walk_pawn_pushes(const Board& board, const Bitboard dg_pin_mask, 
       visit_single_push(QuietMove{
           .origin = pawn_single_push_origin(side_to_move, target),
           .target = target,
-          .side_to_move = side_to_move,
           .piece_type = PieceType::PAWN,
       });
     });
@@ -175,7 +171,6 @@ constexpr void walk_pawn_pushes(const Board& board, const Bitboard dg_pin_mask, 
       visit_double_push(QuietMove{
           .origin = pawn_single_push_origin(side_to_move, pawn_single_push_origin(side_to_move, target)),
           .target = target,
-          .side_to_move = side_to_move,
           .piece_type = PieceType::PAWN,
       });
     });
@@ -204,7 +199,6 @@ void walk_en_passants(const Node& node, const Bitboard dg_pin_mask, const Bitboa
             .origin = origin,
             .target = target,
             .victim_origin = node.en_passant_victim_origin,
-            .side_to_move = side_to_move,
         });
       }
     }
@@ -233,7 +227,6 @@ constexpr void walk_pawn_captures(const Node& node, const Bitboard dg_pin_mask, 
             visit_move.template operator()<new_castling_rights>(CapturePromotion{
                 .origin = origin_of(context.side_to_move, target),
                 .target = target,
-                .side_to_move = context.side_to_move,
                 .promotion = promotion,
                 .victim = victim,
             });
@@ -244,7 +237,6 @@ constexpr void walk_pawn_captures(const Node& node, const Bitboard dg_pin_mask, 
                                              visit_move.template operator()<context.castling_rights>(Capture{
                                                  .origin = origin_of(context.side_to_move, target),
                                                  .target = target,
-                                                 .side_to_move = context.side_to_move,
                                                  .aggressor = PieceType::PAWN,
                                                  .victim = victim,
                                              });

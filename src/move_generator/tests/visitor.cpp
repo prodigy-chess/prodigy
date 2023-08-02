@@ -74,7 +74,7 @@ class Visitor : public move_generator::Visitor<Visitor> {
   template <Node::Context context>
   constexpr void visit(const std::string_view fen, const auto& move, const Ply halfmove_clock) const noexcept {
     INFO(fen);
-    const auto undo = scoped_move<context.can_en_passant>(node_, move);
+    const auto undo = scoped_move<!context.side_to_move, context.can_en_passant>(node_, move);
     REQUIRE(to_position<context>(node_, halfmove_clock) == parse_fen(fen).value());
   }
 
@@ -88,21 +88,18 @@ TEST_CASE("scoped_move") {
     visitor.visit_pawn_move<context.enable_en_passant()>(QuietMove{
         .origin = to_bitboard(Square::A2),
         .target = to_bitboard(Square::A4),
-        .side_to_move = Color::WHITE,
         .piece_type = PieceType::PAWN,
     });
     REQUIRE(to_position<context>(node, Ply{0}) == position);
     visitor.visit_pawn_move<context.move(context.castling_rights)>(QuietMove{
         .origin = to_bitboard(Square::G2),
         .target = to_bitboard(Square::G4),
-        .side_to_move = Color::WHITE,
         .piece_type = PieceType::PAWN,
     });
     REQUIRE(to_position<context>(node, Ply{0}) == position);
     visitor.visit_pawn_move<context.move(context.castling_rights)>(Capture{
         .origin = to_bitboard(Square::G2),
         .target = to_bitboard(Square::H3),
-        .side_to_move = Color::WHITE,
         .aggressor = PieceType::PAWN,
         .victim = PieceType::PAWN,
     });
@@ -110,7 +107,6 @@ TEST_CASE("scoped_move") {
     visitor.visit_knight_move<context.move(context.castling_rights)>(Capture{
         .origin = to_bitboard(Square::E5),
         .target = to_bitboard(Square::F7),
-        .side_to_move = Color::WHITE,
         .aggressor = PieceType::KNIGHT,
         .victim = PieceType::PAWN,
     });
@@ -118,7 +114,6 @@ TEST_CASE("scoped_move") {
     visitor.visit_bishop_move<context.move(context.castling_rights)>(Capture{
         .origin = to_bitboard(Square::E2),
         .target = to_bitboard(Square::A6),
-        .side_to_move = Color::WHITE,
         .aggressor = PieceType::BISHOP,
         .victim = PieceType::BISHOP,
     });
@@ -126,14 +121,12 @@ TEST_CASE("scoped_move") {
     visitor.visit_rook_move<context.move_queenside_rook(context.castling_rights)>(QuietMove{
         .origin = to_bitboard(Square::A1),
         .target = to_bitboard(Square::B1),
-        .side_to_move = Color::WHITE,
         .piece_type = PieceType::ROOK,
     });
     REQUIRE(to_position<context>(node, Ply{0}) == position);
     visitor.visit_queen_move<context.move(context.castling_rights)>(Capture{
         .origin = to_bitboard(Square::F3),
         .target = to_bitboard(Square::H3),
-        .side_to_move = Color::WHITE,
         .aggressor = PieceType::QUEEN,
         .victim = PieceType::PAWN,
     });
@@ -143,7 +136,6 @@ TEST_CASE("scoped_move") {
         .king_target = to_bitboard(Square::G1),
         .rook_origin = to_bitboard(Square::H1),
         .rook_target = to_bitboard(Square::F1),
-        .side_to_move = Color::WHITE,
     });
     REQUIRE(to_position<context>(node, Ply{0}) == position);
   });
