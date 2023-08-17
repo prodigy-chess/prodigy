@@ -11,6 +11,8 @@ jobs:
       CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm-cache
       LLVM_CACHE: ${{ github.workspace }}/llvm-cache
       LLVM_VERSION: 16.0.4
+      # TODO: remove when fixed: https://github.com/llvm/llvm-project/issues/52771
+      ASAN_OPTIONS: alloc_dealloc_mismatch=0
     strategy:
       matrix:
         os: [ubuntu-22.04]
