@@ -70,6 +70,8 @@ class Visitor : public move_generator::Visitor<Visitor> {
     visit<context>("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R4RK1 b kq - 1 1", move, Ply{1});
   }
 
+  constexpr void is_check() const noexcept {}
+
  private:
   template <Node::Context context>
   constexpr void visit(const std::string_view fen, const auto& move, const Ply halfmove_clock) const noexcept {

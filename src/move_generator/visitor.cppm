@@ -14,34 +14,36 @@ template <typename Derived>
 class Visitor {
  public:
   template <Node::Context context>
-  constexpr void visit_pawn_move(const auto& move) {
+  void visit_pawn_move(const auto& move) {
     static_cast<Derived*>(this)->template visit_pawn_move<context>(move);
   }
 
   template <Node::Context context>
-  constexpr void visit_knight_move(const auto& move) {
+  void visit_knight_move(const auto& move) {
     static_cast<Derived*>(this)->template visit_knight_move<context>(move);
   }
 
   template <Node::Context context>
-  constexpr void visit_bishop_move(const auto& move) {
+  void visit_bishop_move(const auto& move) {
     static_cast<Derived*>(this)->template visit_bishop_move<context>(move);
   }
 
   template <Node::Context context>
-  constexpr void visit_rook_move(const auto& move) {
+  void visit_rook_move(const auto& move) {
     static_cast<Derived*>(this)->template visit_rook_move<context>(move);
   }
 
   template <Node::Context context>
-  constexpr void visit_queen_move(const auto& move) {
+  void visit_queen_move(const auto& move) {
     static_cast<Derived*>(this)->template visit_queen_move<context>(move);
   }
 
   template <Node::Context context>
-  constexpr void visit_king_move(const auto& move) {
+  void visit_king_move(const auto& move) {
     static_cast<Derived*>(this)->template visit_king_move<context>(move);
   }
+
+  void is_check() { static_cast<Derived*>(this)->is_check(); }
 
  private:
   template <std::invocable<> Undo>
