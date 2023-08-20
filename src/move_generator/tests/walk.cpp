@@ -3,6 +3,7 @@
 #include <catch2/generators/catch_generators.hpp>
 #include <cstdint>
 #include <string_view>
+#include <utility>
 
 import prodigy.core;
 import prodigy.move_generator;
@@ -28,6 +29,7 @@ struct MoveCounts {
   std::uint64_t king_captures;
   std::uint64_t kingside_castles;
   std::uint64_t queenside_castles;
+  bool is_check;
 
   friend constexpr bool operator==(const MoveCounts&, const MoveCounts&) = default;
 };
@@ -120,6 +122,8 @@ class Visitor : public move_generator::Visitor<Visitor> {
         : ++move_counts_.queenside_castles;
   }
 
+  void is_check() const noexcept { REQUIRE(!std::exchange(move_counts_.is_check, true)); }
+
  private:
   MoveCounts& move_counts_;
 };
@@ -165,6 +169,7 @@ TEST_CASE("walk") {
           "can't kingside castle out of check",
           {
               .king_quiet_moves = 4,
+              .is_check = true,
           },
       },
       {
@@ -232,6 +237,7 @@ TEST_CASE("walk") {
           "can't queenside castle out of check",
           {
               .king_quiet_moves = 4,
+              .is_check = true,
           },
       },
       {
@@ -290,6 +296,7 @@ TEST_CASE("walk") {
               .knight_quiet_moves = 1,
               .knight_captures = 1,
               .king_quiet_moves = 4,
+              .is_check = true,
           },
       },
       {
@@ -317,6 +324,7 @@ TEST_CASE("walk") {
               .bishop_quiet_moves = 1,
               .bishop_captures = 1,
               .king_quiet_moves = 3,
+              .is_check = true,
           },
       },
       {
@@ -344,6 +352,7 @@ TEST_CASE("walk") {
               .rook_quiet_moves = 1,
               .rook_captures = 1,
               .king_quiet_moves = 4,
+              .is_check = true,
           },
       },
       {
@@ -371,6 +380,7 @@ TEST_CASE("walk") {
               .queen_quiet_moves = 1,
               .queen_captures = 1,
               .king_quiet_moves = 6,
+              .is_check = true,
           },
       },
       {
@@ -422,6 +432,7 @@ TEST_CASE("walk") {
               .pawn_double_pushes = 1,
               .pawn_captures = 1,
               .king_quiet_moves = 5,
+              .is_check = true,
           },
       },
       {
@@ -477,6 +488,7 @@ TEST_CASE("walk") {
               .en_passants = 1,
               .king_quiet_moves = 6,
               .king_captures = 1,
+              .is_check = true,
           },
       },
       {
@@ -486,6 +498,7 @@ TEST_CASE("walk") {
               .en_passants = 1,
               .king_quiet_moves = 6,
               .king_captures = 1,
+              .is_check = true,
           },
       },
       {
@@ -502,6 +515,7 @@ TEST_CASE("walk") {
           {
               .pawn_single_pushes = 1,
               .king_quiet_moves = 4,
+              .is_check = true,
           },
       },
   }));

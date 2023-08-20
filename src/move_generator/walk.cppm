@@ -365,8 +365,9 @@ void walk(const Node& node, Visitor<T>&& visitor) {
       break;
     case 1:
       walk_non_king_moves<context>(node, king_origin, visitor, half_open_segment(square_of(checkers), king_origin));
-      break;
+      [[fallthrough]];
     default:
+      visitor.is_check();
       break;
   }
 }

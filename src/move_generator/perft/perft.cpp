@@ -52,6 +52,8 @@ class Visitor : public move_generator::Visitor<Visitor<Derived, SubVisitor>> {
     visit<context>(move);
   }
 
+  constexpr void is_check() const noexcept {}
+
  private:
   template <Node::Context context>
   constexpr void visit(const auto& move) const noexcept {
