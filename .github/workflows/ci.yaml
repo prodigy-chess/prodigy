@@ -43,7 +43,7 @@ jobs:
           cached: ${{ steps.cache-llvm.outputs.cache-hit }}
 
       - name: Setup CMake & Ninja
-        uses: lukka/get-cmake@v3.27.1
+        uses: lukka/get-cmake@v3.27.4
 
       - name: Setup Mold
         uses: rui314/setup-mold@v1
