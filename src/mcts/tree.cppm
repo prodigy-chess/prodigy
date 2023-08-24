@@ -2,6 +2,7 @@ module;
 
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <span>
 
 export module prodigy.mcts:tree;
@@ -25,6 +26,12 @@ export class alignas(Arena::ALIGNMENT) Edge {
 
   explicit Edge(const EnPassant&, CastlingRights child_castling_rights, bool child_can_en_passant) noexcept;
 
+  Edge(const Edge&) = delete;
+  Edge& operator=(const Edge&) = delete;
+
+  Edge(Edge&&) = delete;
+  Edge& operator=(Edge&&) = delete;
+
  private:
   enum class MoveType : std::uint8_t { QUIET_MOVE, CAPTURE, CASTLE, QUIET_PROMOTION, CAPTURE_PROMOTION, EN_PASSANT };
 
@@ -42,17 +49,36 @@ export class alignas(Arena::ALIGNMENT) Edge {
 };
 static_assert(sizeof(Edge) == 32);
 
+using EdgeCount = std::uint8_t;
+
 export class alignas(Arena::ALIGNMENT) Node {
  public:
-  explicit Node(std::uint8_t edge_count, bool is_check) noexcept;
+  explicit Node(EdgeCount, bool is_check) noexcept;
+
+  Node(const Node&) = delete;
+  Node& operator=(const Node&) = delete;
+
+  Node(Node&&) = delete;
+  Node& operator=(Node&&) = delete;
 
   std::span<Edge> edges() noexcept;
 
   bool is_check() const noexcept;
 
  private:
-  const std::uint8_t edge_count_;
+  const EdgeCount edge_count_;
   const bool is_check_;
 };
 static_assert(sizeof(Node) == 8);
+
+export class Tree {
+ public:
+  explicit Tree(const Position&);
+
+  Node& root() noexcept;
+
+ private:
+  Arena arena_{sizeof(Node) + sizeof(Edge) * std::numeric_limits<EdgeCount>::max()};
+  Node& root_;
+};
 }  // namespace prodigy::mcts
