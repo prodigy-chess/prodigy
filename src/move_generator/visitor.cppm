@@ -13,34 +13,34 @@ export namespace prodigy::move_generator {
 template <typename Derived>
 class Visitor {
  public:
-  template <Node::Context context>
+  template <Node::Context child_context>
   void visit_pawn_move(const auto& move) {
-    static_cast<Derived*>(this)->template visit_pawn_move<context>(move);
+    static_cast<Derived*>(this)->template visit_pawn_move<child_context>(move);
   }
 
-  template <Node::Context context>
+  template <Node::Context child_context>
   void visit_knight_move(const auto& move) {
-    static_cast<Derived*>(this)->template visit_knight_move<context>(move);
+    static_cast<Derived*>(this)->template visit_knight_move<child_context>(move);
   }
 
-  template <Node::Context context>
+  template <Node::Context child_context>
   void visit_bishop_move(const auto& move) {
-    static_cast<Derived*>(this)->template visit_bishop_move<context>(move);
+    static_cast<Derived*>(this)->template visit_bishop_move<child_context>(move);
   }
 
-  template <Node::Context context>
+  template <Node::Context child_context>
   void visit_rook_move(const auto& move) {
-    static_cast<Derived*>(this)->template visit_rook_move<context>(move);
+    static_cast<Derived*>(this)->template visit_rook_move<child_context>(move);
   }
 
-  template <Node::Context context>
+  template <Node::Context child_context>
   void visit_queen_move(const auto& move) {
-    static_cast<Derived*>(this)->template visit_queen_move<context>(move);
+    static_cast<Derived*>(this)->template visit_queen_move<child_context>(move);
   }
 
-  template <Node::Context context>
+  template <Node::Context child_context>
   void visit_king_move(const auto& move) {
-    static_cast<Derived*>(this)->template visit_king_move<context>(move);
+    static_cast<Derived*>(this)->template visit_king_move<child_context>(move);
   }
 
   void is_check() { static_cast<Derived*>(this)->is_check(); }

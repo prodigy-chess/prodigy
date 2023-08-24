@@ -38,9 +38,9 @@ class Visitor : public move_generator::Visitor<Visitor> {
  public:
   constexpr explicit Visitor(MoveCounts& move_counts) noexcept : move_counts_(move_counts) {}
 
-  template <Node::Context context>
+  template <Node::Context child_context>
   constexpr void visit_pawn_move(const QuietMove& move) const noexcept {
-    shift(move.origin, !context.side_to_move == Color::WHITE ? Direction::NORTH : Direction::SOUTH) == move.target
+    shift(move.origin, !child_context.side_to_move == Color::WHITE ? Direction::NORTH : Direction::SOUTH) == move.target
         ? ++move_counts_.pawn_single_pushes
         : ++move_counts_.pawn_double_pushes;
   }
@@ -115,9 +115,10 @@ class Visitor : public move_generator::Visitor<Visitor> {
     ++move_counts_.king_captures;
   }
 
-  template <Node::Context context>
+  template <Node::Context child_context>
   constexpr void visit_king_move(const Castle& move) const noexcept {
-    move.rook_origin == ColorTraits<!context.side_to_move>::template CastlingTraits<PieceType::KING>::CASTLE.rook_origin
+    move.rook_origin ==
+            ColorTraits<!child_context.side_to_move>::template CastlingTraits<PieceType::KING>::CASTLE.rook_origin
         ? ++move_counts_.kingside_castles
         : ++move_counts_.queenside_castles;
   }
