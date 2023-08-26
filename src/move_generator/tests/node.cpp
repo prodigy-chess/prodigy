@@ -36,53 +36,13 @@ TEST_CASE("enable_en_passant") {
   });
 }
 
-TEST_CASE("move_kingside_rook") {
-  validate([]<auto context, auto castling_rights> {
-    STATIC_REQUIRE(context.move_kingside_rook(castling_rights) ==
-                   Node::Context{
-                       .side_to_move = !context.side_to_move,
-                       .castling_rights = context.side_to_move == Color::WHITE
-                                              ? castling_rights & ~CastlingRights::WHITE_KINGSIDE
-                                              : castling_rights & ~CastlingRights::BLACK_KINGSIDE,
-                       .can_en_passant = false,
-                   });
-  });
-}
-
-TEST_CASE("move_queenside_rook") {
-  validate([]<auto context, auto castling_rights> {
-    STATIC_REQUIRE(context.move_queenside_rook(castling_rights) ==
-                   Node::Context{
-                       .side_to_move = !context.side_to_move,
-                       .castling_rights = context.side_to_move == Color::WHITE
-                                              ? castling_rights & ~CastlingRights::WHITE_QUEENSIDE
-                                              : castling_rights & ~CastlingRights::BLACK_QUEENSIDE,
-                       .can_en_passant = false,
-                   });
-  });
-}
-
-TEST_CASE("move_king") {
-  validate([]<auto context, auto castling_rights> {
-    STATIC_REQUIRE(context.move_king(castling_rights) ==
-                   Node::Context{
-                       .side_to_move = !context.side_to_move,
-                       .castling_rights =
-                           context.side_to_move == Color::WHITE
-                               ? castling_rights & ~(CastlingRights::WHITE_KINGSIDE | CastlingRights::WHITE_QUEENSIDE)
-                               : castling_rights & ~(CastlingRights::BLACK_KINGSIDE | CastlingRights::BLACK_QUEENSIDE),
-                       .can_en_passant = false,
-                   });
-  });
-}
-
 TEST_CASE("move") {
-  validate([]<auto context, auto castling_rights> {
-    STATIC_REQUIRE(context.move(castling_rights) == Node::Context{
-                                                        .side_to_move = !context.side_to_move,
-                                                        .castling_rights = castling_rights,
-                                                        .can_en_passant = false,
-                                                    });
+  validate([]<auto context, auto child_castling_rights> {
+    STATIC_REQUIRE(context.move(child_castling_rights) == Node::Context{
+                                                              .side_to_move = !context.side_to_move,
+                                                              .castling_rights = child_castling_rights,
+                                                              .can_en_passant = false,
+                                                          });
   });
 }
 }  // namespace

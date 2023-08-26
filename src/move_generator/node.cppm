@@ -17,43 +17,10 @@ struct Node {
       };
     }
 
-    consteval Context move_kingside_rook(const CastlingRights castling_rights) const noexcept {
-      return move([&] {
-        switch (side_to_move) {
-          case Color::WHITE:
-            return castling_rights & ~CastlingRights::WHITE_KINGSIDE;
-          case Color::BLACK:
-            return castling_rights & ~CastlingRights::BLACK_KINGSIDE;
-        }
-      }());
-    }
-
-    consteval Context move_queenside_rook(const CastlingRights castling_rights) const noexcept {
-      return move([&] {
-        switch (side_to_move) {
-          case Color::WHITE:
-            return castling_rights & ~CastlingRights::WHITE_QUEENSIDE;
-          case Color::BLACK:
-            return castling_rights & ~CastlingRights::BLACK_QUEENSIDE;
-        }
-      }());
-    }
-
-    consteval Context move_king(const CastlingRights castling_rights) const noexcept {
-      return move([&] {
-        switch (side_to_move) {
-          case Color::WHITE:
-            return castling_rights & ~(CastlingRights::WHITE_KINGSIDE | CastlingRights::WHITE_QUEENSIDE);
-          case Color::BLACK:
-            return castling_rights & ~(CastlingRights::BLACK_KINGSIDE | CastlingRights::BLACK_QUEENSIDE);
-        }
-      }());
-    }
-
-    consteval Context move(const CastlingRights castling_rights) const noexcept {
+    consteval Context move(const CastlingRights child_castling_rights) const noexcept {
       return {
           .side_to_move = !side_to_move,
-          .castling_rights = castling_rights,
+          .castling_rights = child_castling_rights,
           .can_en_passant = false,
       };
     }
