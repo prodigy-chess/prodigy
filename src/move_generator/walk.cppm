@@ -29,17 +29,20 @@ constexpr void for_each_capture(const Board& board, const Bitboard targets,
 
 template <Color side_to_move, CastlingRights castling_rights>
 constexpr void for_each_capture(const Board& board, Bitboard targets, const auto& callback) {
-#define _(SIDE)                                                                                                   \
-  if constexpr (using CastlingTraits = ColorTraits<!side_to_move>::template CastlingTraits<SIDE>;                 \
-                any(castling_rights & CastlingTraits::CASTLING_RIGHTS)) {                                         \
-    if (const auto target = board[!side_to_move, PieceType::ROOK] & targets & CastlingTraits::CASTLE.rook_origin; \
-        any(target)) {                                                                                            \
-      callback.template operator()<castling_rights & ~CastlingTraits::CASTLING_RIGHTS>(target, PieceType::ROOK);  \
-      targets ^= target;                                                                                          \
-    }                                                                                                             \
-  }
-  _(PieceType::KING)
-  _(PieceType::QUEEN)
+  using ColorTraits = ColorTraits<!side_to_move>;
+#define _(SIDE)                                                                                                        \
+  do {                                                                                                                 \
+    if constexpr (any(castling_rights & ColorTraits::SIDE##_CASTLING_RIGHTS)) {                                        \
+      if (const auto target =                                                                                          \
+              board[!side_to_move, PieceType::ROOK] & targets & ColorTraits::SIDE##_CASTLE.rook_origin;                \
+          any(target)) {                                                                                               \
+        callback.template operator()<castling_rights & ~ColorTraits::SIDE##_CASTLING_RIGHTS>(target, PieceType::ROOK); \
+        targets ^= target;                                                                                             \
+      }                                                                                                                \
+    }                                                                                                                  \
+  } while (false)
+  _(KINGSIDE);
+  _(QUEENSIDE);
 #undef _
   for_each_capture<side_to_move>(board, targets, [&](const auto target, const auto victim) {
     callback.template operator()<castling_rights>(target, victim);
@@ -67,20 +70,6 @@ constexpr void walk_non_pawn_quiet_moves_and_captures(const Board& board, const 
       });
 }
 
-template <Color side_to_move, CastlingRights castling_rights, PieceType side>
-constexpr void walk_castle(const Board& board, const Bitboard king_danger_set, const auto& visit_move) {
-  if constexpr (using CastlingTraits = ColorTraits<side_to_move>::template CastlingTraits<side>;
-                any(castling_rights & CastlingTraits::CASTLING_RIGHTS)) {
-    static constexpr auto& castle = CastlingTraits::CASTLE;
-    if (static constexpr auto rook_path =
-            half_open_segment(square_of(castle.rook_target), square_of(castle.rook_origin));
-        empty(board.occupancy() & rook_path) &&
-        empty(king_danger_set & (castle.king_origin | castle.rook_target | castle.king_target))) {
-      visit_move(castle);
-    }
-  }
-}
-
 template <Color side_to_move, CastlingRights castling_rights>
 void walk_king_moves(const Board& board, const Square king_origin, const auto& visit_move) {
   const auto king_danger_set = [&] {
@@ -98,11 +87,21 @@ void walk_king_moves(const Board& board, const Square king_origin, const auto& v
   }();
   walk_non_pawn_quiet_moves_and_captures<side_to_move, castling_rights, PieceType::KING>(
       board, board[side_to_move, PieceType::KING], king_attack_set(king_origin) & ~king_danger_set, visit_move);
-#define _(SIDE)                                     \
-  walk_castle<side_to_move, castling_rights, SIDE>( \
-      board, king_danger_set, [&](const auto& move) { visit_move.template operator()<castling_rights>(move); })
-  _(PieceType::KING);
-  _(PieceType::QUEEN);
+  using ColorTraits = ColorTraits<side_to_move>;
+#define _(SIDE)                                                                                      \
+  do {                                                                                               \
+    if constexpr (any(castling_rights & ColorTraits::SIDE##_CASTLING_RIGHTS)) {                      \
+      static constexpr auto& castle = ColorTraits::SIDE##_CASTLE;                                    \
+      if (static constexpr auto rook_path =                                                          \
+              half_open_segment(square_of(castle.rook_target), square_of(castle.rook_origin));       \
+          empty(board.occupancy() & rook_path) &&                                                    \
+          empty(king_danger_set & (castle.king_origin | castle.rook_target | castle.king_target))) { \
+        visit_move.template operator()<castling_rights>(castle);                                     \
+      }                                                                                              \
+    }                                                                                                \
+  } while (false)
+  _(KINGSIDE);
+  _(QUEENSIDE);
 #undef _
 }
 
@@ -324,17 +323,21 @@ void walk_non_king_moves(const Node& node, const Square king_origin, Visitor<T>&
       node.board, ~dg_pin_mask, hv_pin_mask,
       [&](const auto origin) { return rook_attack_set(origin, node.board.occupancy()); },
       [&]<auto new_castling_rights>(const auto& move) {
-        switch (using ColorTraits = ColorTraits<context.side_to_move>; move.origin) {
-          case ColorTraits::template CastlingTraits<PieceType::KING>::CASTLE.rook_origin:
-            visitor.template visit_rook_move<context.move_kingside_rook(new_castling_rights)>(move);
-            break;
-          case ColorTraits::template CastlingTraits<PieceType::QUEEN>::CASTLE.rook_origin:
-            visitor.template visit_rook_move<context.move_queenside_rook(new_castling_rights)>(move);
-            break;
-          default:
-            visitor.template visit_rook_move<context.move(new_castling_rights)>(move);
-            break;
-        }
+        using ColorTraits = ColorTraits<context.side_to_move>;
+#define _(SIDE)                                                                                                     \
+  do {                                                                                                              \
+    if constexpr (any(context.castling_rights & ColorTraits::SIDE##_CASTLING_RIGHTS)) {                             \
+      if (move.origin == ColorTraits::SIDE##_CASTLE.rook_origin) {                                                  \
+        visitor.template visit_rook_move<context.move(new_castling_rights & ~ColorTraits::SIDE##_CASTLING_RIGHTS)>( \
+            move);                                                                                                  \
+        return;                                                                                                     \
+      }                                                                                                             \
+    }                                                                                                               \
+  } while (false)
+        _(KINGSIDE);
+        _(QUEENSIDE);
+#undef _
+        visitor.template visit_rook_move<context.move(new_castling_rights)>(move);
       },
       check_mask...);
   const auto walk_queen_moves = [&](const auto origin_mask, const auto pin_mask, const auto& lookup_attack_set) {
@@ -357,7 +360,8 @@ void walk(const Node& node, Visitor<T>&& visitor) {
   const auto king_origin = square_of(node.board[context.side_to_move, PieceType::KING]);
   walk_king_moves<context.side_to_move, context.castling_rights>(
       node.board, king_origin, [&]<auto new_castling_rights>(const auto& move) {
-        visitor.template visit_king_move<context.move_king(new_castling_rights)>(move);
+        visitor.template visit_king_move<context.move(new_castling_rights &
+                                                      ~ColorTraits<context.side_to_move>::CASTLING_RIGHTS)>(move);
       });
   switch (const auto checkers = make_checkers<context.side_to_move>(node.board, king_origin); popcount(checkers)) {
     case 0:

@@ -38,7 +38,7 @@ TEST_CASE("to_move") {
       .aggressor = PieceType::PAWN,
       .victim = PieceType::PAWN,
   }>();
-  validate<ColorTraits<Color::WHITE>::CastlingTraits<PieceType::KING>::CASTLE>();
+  validate<ColorTraits<Color::WHITE>::KINGSIDE_CASTLE>();
   validate<QuietPromotion{
       .origin = to_bitboard(Square::E7),
       .target = to_bitboard(Square::E8),

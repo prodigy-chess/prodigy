@@ -121,7 +121,8 @@ TEST_CASE("scoped_move") {
         .victim = PieceType::BISHOP,
     });
     REQUIRE(to_position<context>(node, Ply{0}) == position);
-    visitor.visit_rook_move<context.move_queenside_rook(context.castling_rights)>(QuietMove{
+    visitor.visit_rook_move<context.move(context.castling_rights &
+                                         ~ColorTraits<context.side_to_move>::QUEENSIDE_CASTLING_RIGHTS)>(QuietMove{
         .origin = to_bitboard(Square::A1),
         .target = to_bitboard(Square::B1),
         .piece_type = PieceType::ROOK,
@@ -134,12 +135,14 @@ TEST_CASE("scoped_move") {
         .victim = PieceType::PAWN,
     });
     REQUIRE(to_position<context>(node, Ply{0}) == position);
-    visitor.visit_king_move<context.move_king(context.castling_rights)>(Castle{
-        .king_origin = to_bitboard(Square::E1),
-        .king_target = to_bitboard(Square::G1),
-        .rook_origin = to_bitboard(Square::H1),
-        .rook_target = to_bitboard(Square::F1),
-    });
+    visitor
+        .visit_king_move<context.move(context.castling_rights & ~ColorTraits<context.side_to_move>::CASTLING_RIGHTS)>(
+            Castle{
+                .king_origin = to_bitboard(Square::E1),
+                .king_target = to_bitboard(Square::G1),
+                .rook_origin = to_bitboard(Square::H1),
+                .rook_target = to_bitboard(Square::F1),
+            });
     REQUIRE(to_position<context>(node, Ply{0}) == position);
   });
 }

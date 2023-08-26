@@ -117,8 +117,7 @@ class Visitor : public move_generator::Visitor<Visitor> {
 
   template <Node::Context child_context>
   constexpr void visit_king_move(const Castle& move) const noexcept {
-    move.rook_origin ==
-            ColorTraits<!child_context.side_to_move>::template CastlingTraits<PieceType::KING>::CASTLE.rook_origin
+    move.rook_origin == ColorTraits<!child_context.side_to_move>::KINGSIDE_CASTLE.rook_origin
         ? ++move_counts_.kingside_castles
         : ++move_counts_.queenside_castles;
   }
