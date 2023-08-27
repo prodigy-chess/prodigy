@@ -17,12 +17,16 @@ struct Capture final {
   PieceType victim;
 };
 
-struct Castle final {
+struct Castle {
   Bitboard king_origin;
   Bitboard king_target;
   Bitboard rook_origin;
   Bitboard rook_target;
 };
+
+struct KingsideCastle final : public Castle {};
+
+struct QueensideCastle final : public Castle {};
 
 struct QuietPromotion final {
   Bitboard origin;

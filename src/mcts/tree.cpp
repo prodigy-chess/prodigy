@@ -23,9 +23,13 @@ Edge::Edge(const Capture& move, const CastlingRights child_castling_rights, cons
       child_castling_rights_(child_castling_rights),
       child_can_en_passant_(child_can_en_passant) {}
 
-Edge::Edge(const Castle& move, const CastlingRights child_castling_rights, const bool child_can_en_passant) noexcept
-    : castle_(move),
-      move_type_(MoveType::CASTLE),
+Edge::Edge(const KingsideCastle&, const CastlingRights child_castling_rights, const bool child_can_en_passant) noexcept
+    : move_type_(MoveType::KINGSIDE_CASTLE),
+      child_castling_rights_(child_castling_rights),
+      child_can_en_passant_(child_can_en_passant) {}
+
+Edge::Edge(const QueensideCastle&, const CastlingRights child_castling_rights, const bool child_can_en_passant) noexcept
+    : move_type_(MoveType::QUEENSIDE_CASTLE),
       child_castling_rights_(child_castling_rights),
       child_can_en_passant_(child_can_en_passant) {}
 

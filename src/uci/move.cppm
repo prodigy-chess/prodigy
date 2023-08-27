@@ -25,7 +25,7 @@ struct Move {
 template <typename T>
 constexpr Move to_move(const T& value) noexcept {
   Move move;
-  if constexpr (std::same_as<T, Castle>) {
+  if constexpr (std::derived_from<T, Castle>) {
     move.origin = square_of(value.king_origin);
     move.target = square_of(value.king_target);
   } else {

@@ -115,11 +115,14 @@ class Visitor : public move_generator::Visitor<Visitor> {
     ++move_counts_.king_captures;
   }
 
-  template <Node::Context child_context>
-  constexpr void visit_king_move(const Castle& move) const noexcept {
-    move.rook_origin == ColorTraits<!child_context.side_to_move>::KINGSIDE_CASTLE.rook_origin
-        ? ++move_counts_.kingside_castles
-        : ++move_counts_.queenside_castles;
+  template <Node::Context>
+  constexpr void visit_king_move(const KingsideCastle&) const noexcept {
+    ++move_counts_.kingside_castles;
+  }
+
+  template <Node::Context>
+  constexpr void visit_king_move(const QueensideCastle&) const noexcept {
+    ++move_counts_.queenside_castles;
   }
 
   void is_check() const noexcept { REQUIRE(!std::exchange(move_counts_.is_check, true)); }

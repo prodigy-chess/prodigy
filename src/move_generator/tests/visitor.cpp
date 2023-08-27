@@ -137,12 +137,12 @@ TEST_CASE("scoped_move") {
     REQUIRE(to_position<context>(node, Ply{0}) == position);
     visitor
         .visit_king_move<context.move(context.castling_rights & ~ColorTraits<context.side_to_move>::CASTLING_RIGHTS)>(
-            Castle{
+            KingsideCastle{{
                 .king_origin = to_bitboard(Square::E1),
                 .king_target = to_bitboard(Square::G1),
                 .rook_origin = to_bitboard(Square::H1),
                 .rook_target = to_bitboard(Square::F1),
-            });
+            }});
     REQUIRE(to_position<context>(node, Ply{0}) == position);
   });
 }
