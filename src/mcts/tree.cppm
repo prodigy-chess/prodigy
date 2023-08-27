@@ -13,19 +13,29 @@ import :arena;
 namespace prodigy::mcts {
 export class alignas(Arena::ALIGNMENT) Edge {
  public:
-  explicit Edge(const QuietMove&, CastlingRights child_castling_rights, bool child_can_en_passant) noexcept;
+  struct EnableEnPassant final {};
 
-  explicit Edge(const Capture&, CastlingRights child_castling_rights, bool child_can_en_passant) noexcept;
+  explicit Edge(const QuietMove&) noexcept;
 
-  explicit Edge(const KingsideCastle&, CastlingRights child_castling_rights, bool child_can_en_passant) noexcept;
+  explicit Edge(const QuietMove&, EnableEnPassant) noexcept;
 
-  explicit Edge(const QueensideCastle&, CastlingRights child_castling_rights, bool child_can_en_passant) noexcept;
+  explicit Edge(const QuietMove&, CastlingRights child_castling_rights) noexcept;
 
-  explicit Edge(const QuietPromotion&, CastlingRights child_castling_rights, bool child_can_en_passant) noexcept;
+  explicit Edge(const Capture&) noexcept;
 
-  explicit Edge(const CapturePromotion&, CastlingRights child_castling_rights, bool child_can_en_passant) noexcept;
+  explicit Edge(const Capture&, CastlingRights child_castling_rights) noexcept;
 
-  explicit Edge(const EnPassant&, CastlingRights child_castling_rights, bool child_can_en_passant) noexcept;
+  explicit Edge(const KingsideCastle&) noexcept;
+
+  explicit Edge(const QueensideCastle&) noexcept;
+
+  explicit Edge(const QuietPromotion&) noexcept;
+
+  explicit Edge(const CapturePromotion&) noexcept;
+
+  explicit Edge(const CapturePromotion&, CastlingRights child_castling_rights) noexcept;
+
+  explicit Edge(const EnPassant&) noexcept;
 
   Edge(const Edge&) = delete;
   Edge& operator=(const Edge&) = delete;
@@ -36,11 +46,15 @@ export class alignas(Arena::ALIGNMENT) Edge {
  private:
   enum class MoveType : std::uint8_t {
     QUIET_MOVE,
+    ENABLE_EN_PASSANT,
+    QUIET_MOVE_NEW_CASTLING_RIGHTS,
     CAPTURE,
+    CAPTURE_NEW_CASTLING_RIGHTS,
     KINGSIDE_CASTLE,
     QUEENSIDE_CASTLE,
     QUIET_PROMOTION,
     CAPTURE_PROMOTION,
+    CAPTURE_PROMOTION_NEW_CASTLING_RIGHTS,
     EN_PASSANT,
   };
 
@@ -52,8 +66,7 @@ export class alignas(Arena::ALIGNMENT) Edge {
     const EnPassant en_passant_;
   };
   const MoveType move_type_;
-  const CastlingRights child_castling_rights_;
-  const bool child_can_en_passant_;
+  CastlingRights child_castling_rights_;
 };
 static_assert(sizeof(Edge) == 32);
 
