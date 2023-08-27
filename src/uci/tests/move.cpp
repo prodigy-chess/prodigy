@@ -12,7 +12,7 @@ template <auto value>
 void validate() {
   STATIC_REQUIRE(to_move(value) == [] {
     Move move;
-    if constexpr (std::same_as<decltype(value), Castle>) {
+    if constexpr (std::derived_from<decltype(value), Castle>) {
       move.origin = square_of(value.king_origin);
       move.target = square_of(value.king_target);
     } else {

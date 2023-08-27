@@ -1,7 +1,6 @@
 module;
 
 #include <cstdint>
-#include <functional>
 #include <limits>
 #include <span>
 
@@ -18,7 +17,9 @@ export class alignas(Arena::ALIGNMENT) Edge {
 
   explicit Edge(const Capture&, CastlingRights child_castling_rights, bool child_can_en_passant) noexcept;
 
-  explicit Edge(const Castle&, CastlingRights child_castling_rights, bool child_can_en_passant) noexcept;
+  explicit Edge(const KingsideCastle&, CastlingRights child_castling_rights, bool child_can_en_passant) noexcept;
+
+  explicit Edge(const QueensideCastle&, CastlingRights child_castling_rights, bool child_can_en_passant) noexcept;
 
   explicit Edge(const QuietPromotion&, CastlingRights child_castling_rights, bool child_can_en_passant) noexcept;
 
@@ -33,12 +34,19 @@ export class alignas(Arena::ALIGNMENT) Edge {
   Edge& operator=(Edge&&) = delete;
 
  private:
-  enum class MoveType : std::uint8_t { QUIET_MOVE, CAPTURE, CASTLE, QUIET_PROMOTION, CAPTURE_PROMOTION, EN_PASSANT };
+  enum class MoveType : std::uint8_t {
+    QUIET_MOVE,
+    CAPTURE,
+    KINGSIDE_CASTLE,
+    QUEENSIDE_CASTLE,
+    QUIET_PROMOTION,
+    CAPTURE_PROMOTION,
+    EN_PASSANT,
+  };
 
   union {
     const QuietMove quiet_move_;
     const Capture capture_;
-    const std::reference_wrapper<const Castle> castle_;
     const QuietPromotion quiet_promotion_;
     const CapturePromotion capture_promotion_;
     const EnPassant en_passant_;
