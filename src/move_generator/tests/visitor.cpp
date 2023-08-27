@@ -85,7 +85,7 @@ class Visitor : public move_generator::Visitor<Visitor> {
 };
 
 TEST_CASE("scoped_move") {
-  const auto position = parse_fen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1").value();
+  const auto position = parse_fen(KIWIPETE).value();
   dispatch(position, [&]<auto context>(auto node) {
     const Visitor visitor(node);
     visitor.visit_pawn_move<context.enable_en_passant()>(QuietMove{
