@@ -18,6 +18,7 @@ target_sources(
          ply.cppm
          position.cppm
          square.cppm
+         visitor.cppm
 )
 target_link_libraries(core PRIVATE magic_enum)
 add_subdirectory(tests)

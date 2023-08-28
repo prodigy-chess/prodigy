@@ -1,8 +1,10 @@
 module;
 
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <span>
+#include <utility>
 
 export module prodigy.mcts:tree;
 
@@ -42,6 +44,27 @@ export class alignas(Arena::ALIGNMENT) Edge {
 
   Edge(Edge&&) = delete;
   Edge& operator=(Edge&&) = delete;
+
+  template <Color side_to_move>
+  decltype(auto) visit(auto&& visitor) const {
+    switch (move_type_) {
+#define _(MOVE_TYPE, ...) \
+  case MOVE_TYPE:         \
+    return std::invoke(std::forward<decltype(visitor)>(visitor), __VA_ARGS__)
+      _(MoveType::QUIET_MOVE, quiet_move_);
+      _(MoveType::ENABLE_EN_PASSANT, quiet_move_, EnableEnPassant());
+      _(MoveType::QUIET_MOVE_NEW_CASTLING_RIGHTS, quiet_move_, child_castling_rights_);
+      _(MoveType::CAPTURE, capture_);
+      _(MoveType::CAPTURE_NEW_CASTLING_RIGHTS, capture_, child_castling_rights_);
+      _(MoveType::KINGSIDE_CASTLE, ColorTraits<side_to_move>::KINGSIDE_CASTLE);
+      _(MoveType::QUEENSIDE_CASTLE, ColorTraits<side_to_move>::QUEENSIDE_CASTLE);
+      _(MoveType::QUIET_PROMOTION, quiet_promotion_);
+      _(MoveType::CAPTURE_PROMOTION, capture_promotion_);
+      _(MoveType::CAPTURE_PROMOTION_NEW_CASTLING_RIGHTS, capture_promotion_, child_castling_rights_);
+      _(MoveType::EN_PASSANT, en_passant_);
+#undef _
+    }
+  }
 
  private:
   enum class MoveType : std::uint8_t {
