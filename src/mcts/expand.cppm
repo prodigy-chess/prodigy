@@ -1,5 +1,8 @@
 module;
 
+#include <cassert>
+#include <concepts>
+#include <limits>
 #include <utility>
 
 module prodigy.mcts:expand;
@@ -51,6 +54,7 @@ class EdgeInserter : public move_generator::Visitor<EdgeInserter<parent_context>
 
  private:
   void insert(auto&&... args) const noexcept {
+    assert(edge_count_ < std::numeric_limits<EdgeCount>::max());
     ++edge_count_;
     arena_.new_object<Edge>(std::forward<decltype(args)>(args)...);
   }

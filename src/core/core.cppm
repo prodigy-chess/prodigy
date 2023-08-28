@@ -13,3 +13,4 @@ export import :piece_type;
 export import :ply;
 export import :position;
 export import :square;
+export import :visitor;
