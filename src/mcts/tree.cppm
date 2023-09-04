@@ -137,10 +137,13 @@ export class Tree {
  public:
   explicit Tree(const Position&);
 
+  const Position& position() const noexcept;
+
   Node& root() noexcept;
 
  private:
   Arena arena_{sizeof(Node) + sizeof(Edge) * std::numeric_limits<EdgeCount>::max()};
+  Position position_;
   Node& root_;
 };
 }  // namespace prodigy::mcts
