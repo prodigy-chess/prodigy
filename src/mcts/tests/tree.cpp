@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <optional>
 #include <utility>
 
 import prodigy.core;
@@ -216,7 +217,9 @@ TEST_CASE("node") {
 TEST_CASE("tree") {
   move_generator::init().value();
   {
-    Tree tree(parse_fen(KIWIPETE).value());
+    static constexpr auto position = parse_fen(KIWIPETE).value();
+    Tree tree(position);
+    REQUIRE(tree.position() == position);
     REQUIRE(tree.root().edges().size() == 48);
     auto quiet_moves = 0UZ;
     auto enable_en_passants = 0UZ;
@@ -244,7 +247,9 @@ TEST_CASE("tree") {
     REQUIRE_FALSE(tree.root().is_check());
   }
   {
-    Tree tree(parse_fen("r3kq1r/6P1/8/2Pp4/8/8/8/R3K2R w kq d6 0 1").value());
+    static constexpr auto position = parse_fen("r3kq1r/6P1/8/2Pp4/8/8/8/R3K2R w kq d6 0 1").value();
+    Tree tree(position);
+    REQUIRE(tree.position() == position);
     REQUIRE(tree.root().edges().size() == 36);
     auto quiet_moves = 0UZ;
     auto captures_new_castling_rights = 0UZ;
@@ -272,12 +277,16 @@ TEST_CASE("tree") {
     REQUIRE_FALSE(tree.root().is_check());
   }
   {
-    Tree stalemate(parse_fen("kbQ5/8/1K6/8/8/8/8/8 b - - 0 1").value());
+    static constexpr auto position = parse_fen("kbQ5/8/1K6/8/8/8/8/8 b - - 0 1").value();
+    Tree stalemate(position);
+    REQUIRE(stalemate.position() == position);
     REQUIRE(stalemate.root().edges().empty());
     REQUIRE_FALSE(stalemate.root().is_check());
   }
   {
-    Tree checkmate(parse_fen("k1Q5/8/1K6/8/8/8/8/8 b - - 0 1").value());
+    static constexpr auto position = parse_fen("k1Q5/8/1K6/8/8/8/8/8 b - - 0 1").value();
+    Tree checkmate(position);
+    REQUIRE(checkmate.position() == position);
     REQUIRE(checkmate.root().edges().empty());
     REQUIRE(checkmate.root().is_check());
   }

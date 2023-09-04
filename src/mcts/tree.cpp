@@ -50,8 +50,12 @@ std::span<Edge> Node::edges() noexcept { return {reinterpret_cast<Edge*>(this + 
 bool Node::is_check() const noexcept { return is_check_; }
 
 Tree::Tree(const Position& position)
-    : root_(move_generator::dispatch(
-          position, [&]<auto context>(const auto& node) -> decltype(auto) { return expand<context>(node, arena_); })) {}
+    : position_(position),
+      root_(move_generator::dispatch(
+          position_, [&]<auto context>(const auto& node) -> decltype(auto) { return expand<context>(node, arena_); })) {
+}
+
+const Position& Tree::position() const noexcept { return position_; }
 
 Node& Tree::root() noexcept { return root_; }
 }  // namespace prodigy::mcts
