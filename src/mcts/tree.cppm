@@ -1,5 +1,7 @@
 module;
 
+#include <atomic>
+#include <concepts>
 #include <cstdint>
 #include <functional>
 #include <limits>
@@ -13,6 +15,8 @@ import prodigy.core;
 import :arena;
 
 namespace prodigy::mcts {
+export class Node;
+
 export class alignas(Arena::ALIGNMENT) Edge {
  public:
   struct EnableEnPassant final {};
@@ -46,7 +50,7 @@ export class alignas(Arena::ALIGNMENT) Edge {
   Edge& operator=(Edge&&) = delete;
 
   template <Color side_to_move>
-  decltype(auto) visit(auto&& visitor) const {
+  decltype(auto) visit_move(auto&& visitor) const {
     switch (move_type_) {
 #define _(MOVE_TYPE, ...) \
   case MOVE_TYPE:         \
@@ -64,6 +68,19 @@ export class alignas(Arena::ALIGNMENT) Edge {
       _(MoveType::EN_PASSANT, en_passant_);
 #undef _
     }
+  }
+
+  std::pair<Node&, bool> get_or_create_child(std::invocable<> auto&& create_child,
+                                             std::invocable<const Node&> auto&& delete_child) {
+    auto child = child_.load(std::memory_order_acquire);
+    if (child == nullptr) {
+      auto& node = std::invoke(std::forward<decltype(create_child)>(create_child));
+      if (child_.compare_exchange_strong(child, &node, std::memory_order_acq_rel)) {
+        return {node, true};
+      }
+      std::invoke(std::forward<decltype(delete_child)>(delete_child), node);
+    }
+    return {*child, false};
   }
 
  private:
@@ -90,8 +107,9 @@ export class alignas(Arena::ALIGNMENT) Edge {
   };
   const MoveType move_type_;
   CastlingRights child_castling_rights_;
+  std::atomic<Node*> child_ = nullptr;
 };
-static_assert(sizeof(Edge) == 32);
+static_assert(sizeof(Edge) == 40);
 
 using EdgeCount = std::uint8_t;
 
