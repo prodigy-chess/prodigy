@@ -7,7 +7,7 @@ import prodigy.move_generator;
 
 namespace prodigy::mcts {
 namespace {
-TEST_CASE("edge") {
+TEST_CASE("visit_move") {
   auto visited = false;
   SECTION("quiet move") {
     Edge(QuietMove{
@@ -15,7 +15,7 @@ TEST_CASE("edge") {
              .target = to_bitboard(Square::E3),
              .piece_type = PieceType::PAWN,
          })
-        .visit<Color::WHITE>(visitor{
+        .visit_move<Color::WHITE>(visitor{
             [&](const QuietMove&) { REQUIRE_FALSE(std::exchange(visited, true)); },
             [](auto&&...) { FAIL(); },
         });
@@ -28,7 +28,7 @@ TEST_CASE("edge") {
             .piece_type = PieceType::PAWN,
         },
         Edge::EnableEnPassant())
-        .visit<Color::WHITE>(visitor{
+        .visit_move<Color::WHITE>(visitor{
             [&](const QuietMove&, Edge::EnableEnPassant) { REQUIRE_FALSE(std::exchange(visited, true)); },
             [](auto&&...) { FAIL(); },
         });
@@ -41,7 +41,7 @@ TEST_CASE("edge") {
             .piece_type = PieceType::ROOK,
         },
         CastlingRights::WHITE_KINGSIDE)
-        .visit<Color::WHITE>(visitor{
+        .visit_move<Color::WHITE>(visitor{
             [&](const QuietMove&, const CastlingRights child_castling_rights) {
               REQUIRE(child_castling_rights == CastlingRights::WHITE_KINGSIDE);
               REQUIRE_FALSE(std::exchange(visited, true));
@@ -56,7 +56,7 @@ TEST_CASE("edge") {
              .aggressor = PieceType::BISHOP,
              .victim = PieceType::BISHOP,
          })
-        .visit<Color::WHITE>(visitor{
+        .visit_move<Color::WHITE>(visitor{
             [&](const Capture&) { REQUIRE_FALSE(std::exchange(visited, true)); },
             [](auto&&...) { FAIL(); },
         });
@@ -70,7 +70,7 @@ TEST_CASE("edge") {
             .victim = PieceType::ROOK,
         },
         CastlingRights::WHITE_QUEENSIDE)
-        .visit<Color::BLACK>(visitor{
+        .visit_move<Color::BLACK>(visitor{
             [&](const Capture&, const CastlingRights child_castling_rights) {
               REQUIRE(child_castling_rights == CastlingRights::WHITE_QUEENSIDE);
               REQUIRE_FALSE(std::exchange(visited, true));
@@ -80,14 +80,14 @@ TEST_CASE("edge") {
   }
   SECTION("kingside castle") {
     Edge(ColorTraits<Color::WHITE>::KINGSIDE_CASTLE)
-        .visit<Color::WHITE>(visitor{
+        .visit_move<Color::WHITE>(visitor{
             [&](const KingsideCastle&) { REQUIRE_FALSE(std::exchange(visited, true)); },
             [](auto&&...) { FAIL(); },
         });
   }
   SECTION("queenside castle") {
     Edge(ColorTraits<Color::BLACK>::QUEENSIDE_CASTLE)
-        .visit<Color::BLACK>(visitor{
+        .visit_move<Color::BLACK>(visitor{
             [&](const QueensideCastle&) { REQUIRE_FALSE(std::exchange(visited, true)); },
             [](auto&&...) { FAIL(); },
         });
@@ -98,7 +98,7 @@ TEST_CASE("edge") {
              .target = to_bitboard(Square::E8),
              .promotion = PieceType::QUEEN,
          })
-        .visit<Color::WHITE>(visitor{
+        .visit_move<Color::WHITE>(visitor{
             [&](const QuietPromotion&) { REQUIRE_FALSE(std::exchange(visited, true)); },
             [](auto&&...) { FAIL(); },
         });
@@ -110,7 +110,7 @@ TEST_CASE("edge") {
              .promotion = PieceType::QUEEN,
              .victim = PieceType::KNIGHT,
          })
-        .visit<Color::WHITE>(visitor{
+        .visit_move<Color::WHITE>(visitor{
             [&](const CapturePromotion&) { REQUIRE_FALSE(std::exchange(visited, true)); },
             [](auto&&...) { FAIL(); },
         });
@@ -124,7 +124,7 @@ TEST_CASE("edge") {
             .victim = PieceType::ROOK,
         },
         CastlingRights())
-        .visit<Color::WHITE>(visitor{
+        .visit_move<Color::WHITE>(visitor{
             [&](const CapturePromotion&, const CastlingRights child_castling_rights) {
               REQUIRE(empty(child_castling_rights));
               REQUIRE_FALSE(std::exchange(visited, true));
@@ -138,12 +138,50 @@ TEST_CASE("edge") {
              .target = to_bitboard(Square::D6),
              .victim_origin = to_bitboard(Square::D5),
          })
-        .visit<Color::WHITE>(visitor{
+        .visit_move<Color::WHITE>(visitor{
             [&](const EnPassant&) { REQUIRE_FALSE(std::exchange(visited, true)); },
             [](auto&&...) { FAIL(); },
         });
   }
   REQUIRE(visited);
+}
+
+TEST_CASE("get_or_create_child") {
+  Edge edge(QuietMove{
+      .origin = to_bitboard(Square::E2),
+      .target = to_bitboard(Square::E3),
+      .piece_type = PieceType::PAWN,
+  });
+  Node node_1(0, false);
+  {
+    Node node_2(0, true);
+    auto node_2_deleted = false;
+    const auto [child, created] = edge.get_or_create_child(
+        [&] -> Node& {
+          const auto [child, created] =
+              edge.get_or_create_child([&] -> Node& { return node_1; }, [](auto&&...) { FAIL(); });
+          REQUIRE(&child == &node_1);
+          REQUIRE(created);
+          return node_2;
+        },
+        [&](const auto& node) {
+          REQUIRE(&node == &node_2);
+          REQUIRE_FALSE(std::exchange(node_2_deleted, true));
+        });
+    REQUIRE(&child == &node_1);
+    REQUIRE_FALSE(created);
+    REQUIRE(node_2_deleted);
+  }
+  {
+    const auto [child, created] = edge.get_or_create_child(
+        [&] -> Node& {
+          FAIL();
+          return node_1;
+        },
+        [](auto&&...) { FAIL(); });
+    REQUIRE(&child == &node_1);
+    REQUIRE_FALSE(created);
+  }
 }
 
 TEST_CASE("node") {
@@ -187,7 +225,7 @@ TEST_CASE("tree") {
     auto kingside_castles = 0UZ;
     auto queenside_castles = 0UZ;
     for (const auto& edge : tree.root().edges()) {
-      edge.visit<Color::WHITE>(visitor{
+      edge.visit_move<Color::WHITE>(visitor{
           [&](const QuietMove&) { ++quiet_moves; },
           [&](const QuietMove&, Edge::EnableEnPassant) { ++enable_en_passants; },
           [&](const QuietMove&, CastlingRights) { ++quiet_moves_new_castling_rights; },
@@ -215,7 +253,7 @@ TEST_CASE("tree") {
     auto capture_promotions_new_castling_rights = 0UZ;
     auto en_passants = 0UZ;
     for (const auto& edge : tree.root().edges()) {
-      edge.visit<Color::WHITE>(visitor{
+      edge.visit_move<Color::WHITE>(visitor{
           [&](const QuietMove&) { ++quiet_moves; },
           [&](const Capture&, CastlingRights) { ++captures_new_castling_rights; },
           [&](const QuietPromotion&) { ++quiet_promotions; },
