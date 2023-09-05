@@ -7,6 +7,7 @@ target_sources(
          arena.cppm
          expand.cppm
          mcts.cppm
+         simulation_reward.cppm
          tree.cppm
 )
 target_link_libraries(mcts PUBLIC move_generator)
