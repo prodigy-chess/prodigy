@@ -13,13 +13,21 @@ export module prodigy.mcts:tree;
 import prodigy.core;
 
 import :arena;
+import :simulation_reward;
 
 namespace prodigy::mcts {
 export class Node;
 
 export class alignas(Arena::ALIGNMENT) Edge {
  public:
-  struct EnableEnPassant final {};
+  using VisitCount = std::uint32_t;
+
+  struct EnableEnPassant {};
+
+  struct Statistics {
+    VisitCount visit_count;
+    SimulationReward cumulative_simulation_reward;
+  };
 
   explicit Edge(const QuietMove&) noexcept;
 
@@ -83,6 +91,10 @@ export class alignas(Arena::ALIGNMENT) Edge {
     return {*child, false};
   }
 
+  Statistics statistics() const noexcept;
+
+  void backpropagate(SimulationReward) noexcept;
+
  private:
   enum class MoveType : std::uint8_t {
     QUIET_MOVE,
@@ -108,8 +120,10 @@ export class alignas(Arena::ALIGNMENT) Edge {
   const MoveType move_type_;
   CastlingRights child_castling_rights_;
   std::atomic<Node*> child_ = nullptr;
+  std::atomic<VisitCount> visit_count_ = 0;
+  std::atomic<SimulationReward> cumulative_simulation_reward_ = 0;
 };
-static_assert(sizeof(Edge) == 40);
+static_assert(sizeof(Edge) == 48);
 
 using EdgeCount = std::uint8_t;
 

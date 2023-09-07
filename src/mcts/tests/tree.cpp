@@ -185,6 +185,37 @@ TEST_CASE("get_or_create_child") {
   }
 }
 
+TEST_CASE("backpropagate") {
+  Edge edge(QuietMove{
+      .origin = to_bitboard(Square::E2),
+      .target = to_bitboard(Square::E3),
+      .piece_type = PieceType::PAWN,
+  });
+  {
+    const auto statistics = edge.statistics();
+    REQUIRE(statistics.visit_count == 0);
+    REQUIRE(statistics.cumulative_simulation_reward == 0);
+  }
+  edge.backpropagate(0);
+  {
+    const auto statistics = edge.statistics();
+    REQUIRE(statistics.visit_count == 1);
+    REQUIRE(statistics.cumulative_simulation_reward == 0);
+  }
+  edge.backpropagate(1);
+  {
+    const auto statistics = edge.statistics();
+    REQUIRE(statistics.visit_count == 2);
+    REQUIRE(statistics.cumulative_simulation_reward == 1);
+  }
+  edge.backpropagate(0.234567);
+  {
+    const auto statistics = edge.statistics();
+    REQUIRE(statistics.visit_count == 3);
+    REQUIRE(statistics.cumulative_simulation_reward == 1.234567f);
+  }
+}
+
 TEST_CASE("node") {
   Arena arena(sizeof(Node) * 64);
   {

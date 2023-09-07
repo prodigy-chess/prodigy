@@ -1,5 +1,6 @@
 module;
 
+#include <atomic>
 #include <cstdint>
 #include <span>
 
@@ -42,6 +43,22 @@ Edge::Edge(const CapturePromotion& move, const CastlingRights child_castling_rig
       child_castling_rights_(child_castling_rights) {}
 
 Edge::Edge(const EnPassant& move) noexcept : en_passant_(move), move_type_(MoveType::EN_PASSANT) {}
+
+Edge::Statistics Edge::statistics() const noexcept {
+  return {
+      .visit_count = visit_count_.load(std::memory_order_acquire),
+      .cumulative_simulation_reward = cumulative_simulation_reward_.load(std::memory_order_acquire),
+  };
+}
+
+void Edge::backpropagate(const SimulationReward simulation_reward) noexcept {
+  // NOTE: updating statistics as a whole isn't atomic, which should only have a small effect and be tolerable.
+  visit_count_.fetch_add(1, std::memory_order_release);
+  for (auto expected = cumulative_simulation_reward_.load(std::memory_order_relaxed);
+       !cumulative_simulation_reward_.compare_exchange_weak(expected, expected + simulation_reward,
+                                                            std::memory_order_release);) {
+  }
+}
 
 Node::Node(const EdgeCount edge_count, const bool is_check) noexcept : edge_count_(edge_count), is_check_(is_check) {}
 
