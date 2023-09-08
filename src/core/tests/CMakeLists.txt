@@ -1,5 +1,6 @@
 add_catch_test(bitboard DEPENDS magic_enum)
 add_catch_test(board DEPENDS magic_enum)
+add_catch_test(castling_rights)
 add_catch_test(color)
 add_catch_test(fen)
 add_catch_test(square DEPENDS magic_enum)
