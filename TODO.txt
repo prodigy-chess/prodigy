@@ -1,7 +1,16 @@
 CI:
 - LTO
-- Why's -stdlib=libc++ needed for std::expected? https://github.com/llvm/llvm-project/issues/62801
 
 Tooling:
 - clang-tidy
 - coverage
+
+core:
+- _blsr_u64/_tzcnt_u64 for bit/square iteration
+
+move_generator:
+- PEXT bitboards
+
+mcts:
+- two pointers instead of span for Arena
+- always_inline/musttail for tree traversal

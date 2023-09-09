@@ -59,15 +59,15 @@ constexpr void walk_non_pawn_quiet_moves_and_captures(const Board& board, const 
         .piece_type = piece_type,
     });
   });
-  for_each_capture<side_to_move, castling_rights>(
-      board, attack_set & board[!side_to_move], [&]<auto new_castling_rights>(const auto target, const auto victim) {
-        visit_move.template operator()<new_castling_rights>(Capture{
-            .origin = origin,
-            .target = target,
-            .aggressor = piece_type,
-            .victim = victim,
-        });
-      });
+  for_each_capture<side_to_move, castling_rights>(board, attack_set & board[!side_to_move],
+                                                  [&]<auto new_castling_rights>(const auto target, const auto victim) {
+                                                    visit_move.template operator()<new_castling_rights>(Capture{
+                                                        .origin = origin,
+                                                        .target = target,
+                                                        .aggressor = piece_type,
+                                                        .victim = victim,
+                                                    });
+                                                  });
 }
 
 template <Color side_to_move, CastlingRights castling_rights>

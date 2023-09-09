@@ -90,8 +90,7 @@ constexpr Bitboard knight_attack_set(const Square origin) noexcept {
       });
     });
     return attack_sets;
-  }
-  ();
+  }();
   return attack_sets[origin];
 }
 
@@ -111,8 +110,7 @@ constexpr Bitboard king_attack_set(const Square origin) noexcept {
           [&](const auto direction) { attack_sets[origin] |= shift(to_bitboard(origin), direction); });
     });
     return attack_sets;
-  }
-  ();
+  }();
   return attack_sets[origin];
 }
 
@@ -129,8 +127,7 @@ constexpr Bitboard half_open_segment(const Square origin, const Square target) n
       });
     });
     return segments;
-  }
-  ();
+  }();
   return segments[origin][target];
 }
 }  // namespace prodigy::move_generator
