@@ -1,2 +1,3 @@
 add_catch_test(arena)
+add_catch_test(simulation_statistics)
 add_catch_test(tree)
