@@ -185,35 +185,23 @@ TEST_CASE("get_or_create_child") {
   }
 }
 
-TEST_CASE("backpropagate") {
+TEST_CASE("update") {
   Edge edge(QuietMove{
       .origin = to_bitboard(Square::E2),
       .target = to_bitboard(Square::E3),
       .piece_type = PieceType::PAWN,
   });
-  {
-    const auto statistics = edge.statistics();
-    REQUIRE(statistics.visit_count == 0);
-    REQUIRE(statistics.cumulative_simulation_reward == 0);
-  }
-  edge.backpropagate(0);
-  {
-    const auto statistics = edge.statistics();
-    REQUIRE(statistics.visit_count == 1);
-    REQUIRE(statistics.cumulative_simulation_reward == 0);
-  }
-  edge.backpropagate(1);
-  {
-    const auto statistics = edge.statistics();
-    REQUIRE(statistics.visit_count == 2);
-    REQUIRE(statistics.cumulative_simulation_reward == 1);
-  }
-  edge.backpropagate(0.234567);
-  {
-    const auto statistics = edge.statistics();
-    REQUIRE(statistics.visit_count == 3);
-    REQUIRE(statistics.cumulative_simulation_reward == 1.234567f);
-  }
+  REQUIRE(edge.visit_count() == 0);
+  REQUIRE(edge.cumulative_reward() == 0);
+  edge.update(0);
+  REQUIRE(edge.visit_count() == 1);
+  REQUIRE(edge.cumulative_reward() == 0);
+  edge.update(1);
+  REQUIRE(edge.visit_count() == 2);
+  REQUIRE(edge.cumulative_reward() == 1);
+  edge.update(0.234567);
+  REQUIRE(edge.visit_count() == 3);
+  REQUIRE(edge.cumulative_reward() == 1.234567f);
 }
 
 TEST_CASE("node") {
@@ -231,16 +219,19 @@ TEST_CASE("node") {
     });
     auto& node = arena.new_object<Node>(2, false);
     REQUIRE(node.edges().size() == 2);
+    REQUIRE(std::as_const(node).edges().size() == 2);
     REQUIRE_FALSE(node.is_check());
   }
   {
     auto& stalemate = arena.new_object<Node>(0, false);
     REQUIRE(stalemate.edges().empty());
+    REQUIRE(std::as_const(stalemate).edges().empty());
     REQUIRE_FALSE(stalemate.is_check());
   }
   {
     auto& checkmate = arena.new_object<Node>(0, true);
     REQUIRE(checkmate.edges().empty());
+    REQUIRE(std::as_const(checkmate).edges().empty());
     REQUIRE(checkmate.is_check());
   }
 }
