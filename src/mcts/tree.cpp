@@ -1,7 +1,5 @@
 module;
 
-#include <atomic>
-#include <cstdint>
 #include <span>
 
 module prodigy.mcts;
@@ -43,18 +41,6 @@ Edge::Edge(const CapturePromotion& move, const CastlingRights child_castling_rig
       child_castling_rights_(child_castling_rights) {}
 
 Edge::Edge(const EnPassant& move) noexcept : en_passant_(move), move_type_(MoveType::EN_PASSANT) {}
-
-SimulationCount Edge::visit_count() const noexcept { return visit_count_.load(std::memory_order_acquire); }
-
-SimulationReward Edge::cumulative_reward() const noexcept { return cumulative_reward_.load(std::memory_order_acquire); }
-
-void Edge::update(const SimulationReward reward) noexcept {
-  // NOTE: updating statistics as a whole isn't atomic, which should only have a small effect and be tolerable.
-  visit_count_.fetch_add(1, std::memory_order_release);
-  for (auto expected = cumulative_reward_.load(std::memory_order_relaxed);
-       !cumulative_reward_.compare_exchange_weak(expected, expected + reward, std::memory_order_release);) {
-  }
-}
 
 Node::Node(const EdgeCount edge_count, const bool is_check) noexcept : edge_count_(edge_count), is_check_(is_check) {}
 

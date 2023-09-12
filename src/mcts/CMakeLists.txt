@@ -1,4 +1,4 @@
-add_library(mcts arena.cpp tree.cpp)
+add_library(mcts arena.cpp simulation_statistics.cpp tree.cpp)
 target_sources(
   mcts
   PUBLIC FILE_SET
@@ -7,8 +7,7 @@ target_sources(
          arena.cppm
          expand.cppm
          mcts.cppm
-         simulation_count.cppm
-         simulation_reward.cppm
+         simulation_statistics.cppm
          tree.cppm
 )
 target_link_libraries(mcts PUBLIC move_generator)
