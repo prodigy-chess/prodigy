@@ -1,5 +1,6 @@
 add_catch_test(arena)
 add_catch_test(rollout_policy)
+add_catch_test(searcher)
 add_catch_test(simulation_statistics)
 add_catch_test(tree)
 add_catch_test(tree_policy)

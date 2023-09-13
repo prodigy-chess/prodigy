@@ -8,6 +8,7 @@ target_sources(
          expand.cppm
          mcts.cppm
          rollout_policy.cppm
+         searcher.cppm
          simulation_statistics.cppm
          tree.cppm
          tree_policy.cppm
