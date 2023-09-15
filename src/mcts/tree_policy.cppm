@@ -12,7 +12,7 @@ export namespace prodigy::mcts {
 template <typename T>
 concept TreePolicy =
     requires(const T tree_policy, const SimulationCount parent_visit_count, const std::span<Edge> edges) {
-      { tree_policy.select(parent_visit_count, edges) } -> std::same_as<Edge&>;
+      { tree_policy.select(parent_visit_count, edges) } noexcept -> std::same_as<Edge&>;
     };
 
 class UCTPolicy {
