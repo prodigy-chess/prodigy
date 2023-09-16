@@ -9,7 +9,7 @@ import prodigy.core;
 export namespace prodigy::evaluation {
 #define _(PHASE, PAWN_VALUE, KNIGHT_VALUE, BISHOP_VALUE, ROOK_VALUE, QUEEN_VALUE) \
   inline constexpr auto PHASE##_PIECE_VALUES = [] {                               \
-    EnumMap<PieceType, std::uint16_t> piece_values;                               \
+    EnumMap<PieceType, std::int16_t> piece_values;                               \
     piece_values[PieceType::PAWN] = PAWN_VALUE;                                   \
     piece_values[PieceType::KNIGHT] = KNIGHT_VALUE;                               \
     piece_values[PieceType::BISHOP] = BISHOP_VALUE;                               \
