@@ -14,16 +14,17 @@ consteval Square vertical_flip(const Square square) noexcept {
 }
 
 TEST_CASE("piece square tables") {
-  enum_for_each<PieceType>([](const auto piece_type) {
-    static constexpr auto& midgame_psqt = MIDGAME_PSQT[piece_type];
-    static constexpr auto& endgame_psqt = ENDGAME_PSQT[piece_type];
-    enum_for_each<Square>([](const auto square) {
-      static constexpr auto vertically_flipped = vertical_flip(square);
-      STATIC_REQUIRE(file_of(vertically_flipped) == file_of(square));
-      STATIC_REQUIRE(rank_of(vertically_flipped) != rank_of(square));
-      STATIC_REQUIRE(vertical_flip(vertically_flipped) == square);
-      STATIC_REQUIRE(midgame_psqt[Color::WHITE][square] == midgame_psqt[Color::BLACK][vertically_flipped]);
-      STATIC_REQUIRE(endgame_psqt[Color::WHITE][square] == endgame_psqt[Color::BLACK][vertically_flipped]);
+  enum_for_each<Phase>([](const auto phase) {
+    enum_for_each<PieceType>([&](const auto piece_type) {
+      static constexpr auto& psqt = PSQT[phase][piece_type];
+      enum_for_each<Square>([](const auto square) {
+        static constexpr auto vertically_flipped = vertical_flip(square);
+        STATIC_REQUIRE(file_of(vertically_flipped) == file_of(square));
+        STATIC_REQUIRE(rank_of(vertically_flipped) != rank_of(square));
+        STATIC_REQUIRE(vertical_flip(vertically_flipped) == square);
+        STATIC_REQUIRE(psqt[Color::WHITE][square] == psqt[Color::BLACK][vertically_flipped]);
+        STATIC_REQUIRE(psqt[Color::WHITE][square] == psqt[Color::BLACK][vertically_flipped]);
+      });
     });
   });
 }
