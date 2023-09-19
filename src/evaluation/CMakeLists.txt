@@ -5,6 +5,7 @@ target_sources(
          CXX_MODULES
          FILES
          evaluation.cppm
+         evaluator.cppm
          phase.cppm
          piece_values.cppm
          psqt.cppm
