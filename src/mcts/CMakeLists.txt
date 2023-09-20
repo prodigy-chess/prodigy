@@ -7,9 +7,14 @@ target_sources(
          arena.cppm
          expand.cppm
          mcts.cppm
+         rollout_policy.cppm
          simulation_statistics.cppm
          tree.cppm
          tree_policy.cppm
 )
-target_link_libraries(mcts PUBLIC move_generator)
+target_link_libraries(
+  mcts
+  PUBLIC core
+  PRIVATE evaluation move_generator
+)
 add_subdirectory(tests)

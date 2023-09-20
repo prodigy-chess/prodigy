@@ -14,3 +14,4 @@ move_generator:
 mcts:
 - two pointers instead of span for Arena
 - always_inline/musttail for tree traversal
+- fast math
