@@ -32,6 +32,12 @@ consteval float evaluate(const std::string_view fen, const auto&... moves) noexc
 
 TEST_CASE("no moves") { STATIC_REQUIRE(evaluate(STARTING_FEN) == 0); }
 
+TEST_CASE("early promotion") {
+  STATIC_REQUIRE(evaluate("rnbqQbnr/pppp1ppp/4k3/8/8/8/PPP1PPPP/RNBQKBNR b KQ - 0 1") == -1144);
+}
+
+TEST_CASE("checkmate") { STATIC_REQUIRE(evaluate("3k3R/R7/8/8/8/8/8/4K3 b - - 0 1") == -1033.5); }
+
 TEST_CASE("quiet move") {
   STATIC_REQUIRE(evaluate(STARTING_FEN,
                           QuietMove{
