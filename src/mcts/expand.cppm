@@ -5,7 +5,7 @@ module;
 #include <limits>
 #include <utility>
 
-module prodigy.mcts:expand;
+export module prodigy.mcts:expand;
 
 import prodigy.core;
 import prodigy.move_generator;
