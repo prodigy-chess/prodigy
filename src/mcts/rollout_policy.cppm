@@ -20,8 +20,8 @@ concept RolloutPolicy = requires(const Position position) {
       auto&& rollout_policy = std::declval<T>();
       rollout_policy.on_search_start(node.board);
       rollout_policy.on_simulation_start();
-      std::declval<Edge>().visit_move(
-          [](const auto& move, auto&&...) { rollout_policy.on_move<context.side_to_move>(move); });
+      std::declval<Edge>().visit_move<context.side_to_move>(
+          [&](const auto& move, auto&&...) { rollout_policy.template on_move<context.side_to_move>(move); });
       return rollout_policy.template simulate<!context.side_to_move>();
     })
   } -> std::same_as<float>;
@@ -29,9 +29,9 @@ concept RolloutPolicy = requires(const Position position) {
 
 class EvaluationPolicy : private evaluation::Evaluator {
  public:
+  using Evaluator::on_move;
   using Evaluator::on_search_start;
   using Evaluator::on_simulation_start;
-  using Evaluator::on_move;
 
   template <Color side_to_move>
   float simulate() const noexcept {
