@@ -37,7 +37,7 @@ TEST_CASE("UCT select") {
       }),
   };
   auto select = [&, parent_visit_count = 0] mutable -> decltype(auto) {
-    return tree_policy.select(++parent_visit_count, edges);
+    return tree_policy.select(parent_visit_count++, edges);
   };
   {
     auto& edge = select();

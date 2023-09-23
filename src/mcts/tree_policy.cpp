@@ -11,7 +11,6 @@ namespace prodigy::mcts {
 UCTPolicy::UCTPolicy(const float exploration_constant) noexcept : exploration_constant_(exploration_constant) {}
 
 Edge& UCTPolicy::select(const SimulationCount parent_visit_count, const std::span<Edge> edges) const noexcept {
-  assert(parent_visit_count >= 1);
   assert(!edges.empty());
   const auto ln_parent_visit_count = std::logf(parent_visit_count);
   Edge* choice;
