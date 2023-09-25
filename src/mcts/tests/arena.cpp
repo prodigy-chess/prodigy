@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <sstream>
 #include <stdexcept>
+#include <utility>
 
 import prodigy.mcts;
 
@@ -16,6 +17,19 @@ TEST_CASE("constructor") {
                          MessageMatches(Matches((std::ostringstream() << "\\d+ byte arena at \\w+ doesn't support "
                                                                       << Arena::ALIGNMENT << " byte alignment")
                                                     .str())));
+}
+
+TEST_CASE("move") {
+  static constexpr auto value = 42ULL;
+  Arena old_arena(sizeof(value));
+  REQUIRE(old_arena.size() == 0);
+  REQUIRE(old_arena.new_object<decltype(value)>(value) == value);
+  REQUIRE(old_arena.size() == sizeof(value));
+  Arena new_arena(std::move(old_arena));
+  REQUIRE(new_arena.size() == sizeof(value));
+  REQUIRE(old_arena.size() == 0);
+  old_arena.reset(old_arena.size());
+  REQUIRE(old_arena.size() == 0);
 }
 
 template <typename T>
