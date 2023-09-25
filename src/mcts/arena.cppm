@@ -19,7 +19,7 @@ class Arena {
   Arena(const Arena&) = delete;
   Arena& operator=(const Arena&) = delete;
 
-  Arena(Arena&&) = delete;
+  Arena(Arena&&) noexcept;
   Arena& operator=(Arena&&) = delete;
 
   ~Arena();
@@ -38,7 +38,7 @@ class Arena {
   void reset(std::size_t bytes) noexcept;
 
  private:
-  const std::span<std::byte> arena_;
-  std::byte* ptr_ = arena_.data() + arena_.size();
+  std::span<std::byte> arena_;
+  std::byte* ptr_;
 };
 }  // namespace prodigy::mcts

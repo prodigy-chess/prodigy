@@ -12,6 +12,7 @@ module;
 #include <sstream>
 #include <stdexcept>
 #include <system_error>
+#include <utility>
 
 module prodigy.mcts;
 
@@ -37,9 +38,17 @@ Arena::Arena(const std::size_t bytes)
               (std::ostringstream() << "Failed to mprotect " << page_size << " bytes at " << arena).str());
         }
         return std::span(static_cast<std::byte*>(arena), length);
-      }()) {}
+      }()),
+      ptr_(arena_.data() + arena_.size()) {}
 
-Arena::~Arena() { ::munmap(arena_.data(), arena_.size_bytes()); }
+Arena::Arena(Arena&& other) noexcept
+    : arena_(std::exchange(other.arena_, {})), ptr_(std::exchange(other.ptr_, nullptr)) {}
+
+Arena::~Arena() {
+  if (!arena_.empty()) {
+    ::munmap(arena_.data(), arena_.size_bytes());
+  }
+}
 
 std::size_t Arena::size() const noexcept { return arena_.data() + arena_.size() - ptr_; }
 
