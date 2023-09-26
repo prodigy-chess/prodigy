@@ -144,6 +144,8 @@ export class Tree : public SimulationStatistics {
 
   Node& root() noexcept;
 
+  const Node& root() const noexcept;
+
  private:
   Arena arena_{sizeof(Node) + sizeof(Edge) * std::numeric_limits<EdgeCount>::max()};
   Position position_;
