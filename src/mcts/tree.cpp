@@ -59,4 +59,6 @@ Tree::Tree(const Position& position)
 const Position& Tree::position() const noexcept { return position_; }
 
 Node& Tree::root() noexcept { return root_; }
+
+const Node& Tree::root() const noexcept { return root_; }
 }  // namespace prodigy::mcts
