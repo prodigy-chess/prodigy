@@ -1,6 +1,5 @@
 module;
 
-#include <atomic>
 #include <cassert>
 #include <concepts>
 #include <cstddef>
@@ -29,20 +28,12 @@ class alignas(64) Searcher {
     path_.reserve(64);
   }
 
-  void search(Tree& tree, const std::atomic_flag& go) noexcept {
-    search_while(tree, [&] { return go.test(std::memory_order_relaxed); });
-  }
-
-  void search(Tree& tree, SimulationCount simulations) noexcept {
-    search_while(tree, [&] { return simulations-- != 0; });
-  }
-
- private:
-  void search_while(Tree& tree, std::invocable<> auto&& condition) noexcept {
+  void search_until(Tree& tree, std::invocable<SimulationCount> auto&& stop) noexcept {
     arena_.reset(arena_.size());
     rollout_policy_.on_search_start(tree.position().board);
     move_generator::dispatch(tree.position(), [&]<auto context>(const auto& node) {
-      while (std::invoke(std::forward<decltype(condition)>(condition))) {
+      for (SimulationCount simulation_count = 0; !std::invoke(std::forward<decltype(stop)>(stop), simulation_count);
+           ++simulation_count) {
         rollout_policy_.on_simulation_start();
         path_ = {tree};
         node_ = node;
@@ -55,6 +46,7 @@ class alignas(64) Searcher {
     });
   }
 
+ private:
   template <move_generator::Node::Context context>
   float traverse(Node& node) noexcept {
     assert(!path_.empty());
