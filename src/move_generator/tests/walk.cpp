@@ -125,7 +125,7 @@ class Visitor : public move_generator::Visitor<Visitor> {
     ++move_counts_.queenside_castles;
   }
 
-  void is_check() const noexcept { REQUIRE(!std::exchange(move_counts_.is_check, true)); }
+  void is_check() const noexcept { REQUIRE_FALSE(std::exchange(move_counts_.is_check, true)); }
 
  private:
   MoveCounts& move_counts_;
