@@ -218,7 +218,7 @@ TEST_CASE("node") {
 }
 
 TEST_CASE("tree") {
-  move_generator::init().value();
+  REQUIRE(move_generator::init().has_value());
   {
     static constexpr auto position = parse_fen(KIWIPETE).value();
     const Tree tree(position);

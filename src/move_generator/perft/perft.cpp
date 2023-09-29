@@ -96,7 +96,7 @@ class Divide : public Visitor<Divide, Perft> {
 };
 
 template <typename Visitor, typename T>
-std::expected<T, std::string_view> perft(const Position& position, const Ply depth) noexcept {
+[[nodiscard]] std::expected<T, std::string_view> perft(const Position& position, const Ply depth) noexcept {
   if (depth == Ply{0}) {
     return std::unexpected("Invalid depth.");
   }
