@@ -90,7 +90,4 @@ class alignas(64) Searcher {
   std::vector<std::reference_wrapper<SimulationStatistics>> path_;
   move_generator::Node node_;
 };
-
-template <RolloutPolicy RolloutPolicy, TreePolicy TreePolicy>
-explicit Searcher(std::size_t, RolloutPolicy, TreePolicy) -> Searcher<RolloutPolicy, TreePolicy>;
 }  // namespace prodigy::mcts
