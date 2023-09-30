@@ -1,3 +1,4 @@
+add_catch_test(algorithm)
 add_catch_test(arena)
 add_catch_test(rollout_policy)
 add_catch_test(searcher DEPENDS uci)
