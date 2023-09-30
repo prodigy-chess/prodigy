@@ -30,12 +30,12 @@ export namespace prodigy::mcts {
 template <RolloutPolicy RolloutPolicy, TreePolicy TreePolicy>
 class Algorithm {
  public:
-  explicit Algorithm(const std::size_t threads, const std::size_t arena_bytes,
+  explicit Algorithm(const std::optional<std::size_t> threads, const std::size_t arena_bytes,
                      const std::function<RolloutPolicy()>& make_rollout_policy,
                      const std::function<TreePolicy()>& make_tree_policy)
       : searchers_([&] {
           decltype(searchers_) searchers;
-          searchers.reserve(threads == 0 ? std::thread::hardware_concurrency() : threads);
+          searchers.reserve(std::max(threads.value_or(std::thread::hardware_concurrency()), 1UZ));
           const auto arena_bytes_per_searcher =
               arena_bytes / searchers.capacity() / Arena::ALIGNMENT * Arena::ALIGNMENT;
           for (auto i = 0UZ; i < searchers.capacity(); ++i) {
@@ -44,8 +44,8 @@ class Algorithm {
           return searchers;
         }()),
         max_simulations_per_searcher_(
-            std::min<std::common_type_t<SimulationCount, std::size_t>>(
-                std::numeric_limits<SimulationCount>::max(), arena_bytes / (sizeof(Node) + sizeof(Edge) * 43)) /
+            std::min<std::common_type_t<std::size_t, SimulationCount>>(arena_bytes / (sizeof(Node) + sizeof(Edge) * 43),
+                                                                       std::numeric_limits<SimulationCount>::max()) /
             searchers_.size()) {}
 
   Algorithm(const Algorithm&) = delete;
@@ -68,8 +68,8 @@ class Algorithm {
     auto& [stop, tree, searches] = search_state_.emplace();
     for (const auto simulations_per_searcher = simulations
                                                    .transform([&](const auto simulations) {
-                                                     return std::min<SimulationCount>(max_simulations_per_searcher_,
-                                                                                      simulations / searchers_.size());
+                                                     return std::min<SimulationCount>(simulations / searchers_.size(),
+                                                                                      max_simulations_per_searcher_);
                                                    })
                                                    .value_or(max_simulations_per_searcher_);
          auto& searcher : searchers_) {
