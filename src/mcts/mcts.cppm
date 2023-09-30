@@ -1,5 +1,6 @@
 export module prodigy.mcts;
 
+export import :algorithm;
 export import :arena;
 export import :expand;
 export import :rollout_policy;

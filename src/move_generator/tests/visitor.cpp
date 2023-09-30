@@ -85,7 +85,7 @@ class Visitor : public move_generator::Visitor<Visitor> {
 };
 
 TEST_CASE("scoped_move") {
-  const auto position = parse_fen(KIWIPETE).value();
+  static constexpr auto position = parse_fen(KIWIPETE).value();
   dispatch(position, [&]<auto context>(auto node) {
     const Visitor visitor(node);
     visitor.visit_pawn_move<context.enable_en_passant()>(QuietMove{

@@ -92,5 +92,5 @@ class alignas(64) Searcher {
 };
 
 template <RolloutPolicy RolloutPolicy, TreePolicy TreePolicy>
-Searcher(std::size_t, RolloutPolicy, TreePolicy) -> Searcher<RolloutPolicy, TreePolicy>;
+explicit Searcher(std::size_t, RolloutPolicy, TreePolicy) -> Searcher<RolloutPolicy, TreePolicy>;
 }  // namespace prodigy::mcts

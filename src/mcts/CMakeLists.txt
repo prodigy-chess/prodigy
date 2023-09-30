@@ -4,6 +4,7 @@ target_sources(
   PUBLIC FILE_SET
          CXX_MODULES
          FILES
+         algorithm.cppm
          arena.cppm
          expand.cppm
          mcts.cppm
