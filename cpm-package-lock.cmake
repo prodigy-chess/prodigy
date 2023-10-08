@@ -15,6 +15,14 @@ CPMDeclarePackage(
 )
 
 CPMDeclarePackage(
+  asio
+  GIT_TAG asio-1-28-1
+  GITHUB_REPOSITORY chriskohlhoff/asio
+  SYSTEM YES
+  EXCLUDE_FROM_ALL YES
+)
+
+CPMDeclarePackage(
   magic_enum
   VERSION 0.9.3
   GITHUB_REPOSITORY Neargye/magic_enum
