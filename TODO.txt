@@ -15,3 +15,7 @@ mcts:
 - two pointers instead of span for Arena
 - always_inline/musttail for tree traversal
 - fast math
+- transposition table
+- virtual loss
+- compressed edge
+- asio::threadpool instead of std::async
