@@ -4,6 +4,7 @@ module;
 #include <iosfwd>
 #include <optional>
 #include <tuple>
+#include <type_traits>
 
 export module prodigy.uci:move;
 
@@ -22,20 +23,24 @@ struct Move {
   friend constexpr bool operator==(Move, Move) = default;
 };
 
-template <typename T>
-constexpr Move to_move(const T& value) noexcept {
-  Move move;
-  if constexpr (std::derived_from<T, Castle>) {
-    move.origin = square_of(value.king_origin);
-    move.target = square_of(value.king_target);
+constexpr Move to_move(const auto& move) noexcept {
+  if constexpr (std::derived_from<std::remove_cvref_t<decltype(move)>, Castle>) {
+    return {
+        .origin = square_of(move.king_origin),
+        .target = square_of(move.king_target),
+    };
+  } else if constexpr (requires { move.promotion; }) {
+    return {
+        .origin = square_of(move.origin),
+        .target = square_of(move.target),
+        .promotion = move.promotion,
+    };
   } else {
-    move.origin = square_of(value.origin);
-    move.target = square_of(value.target);
+    return {
+        .origin = square_of(move.origin),
+        .target = square_of(move.target),
+    };
   }
-  if constexpr (requires { value.promotion; }) {
-    move.promotion = value.promotion;
-  }
-  return move;
 }
 
 std::ostream& operator<<(std::ostream&, Move);
