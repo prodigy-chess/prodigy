@@ -21,6 +21,7 @@ class Engine : public uci::Engine {
 
   void stop() override;
 
+  Position position_;
   asio::steady_timer timer_;
 };
 }  // namespace prodigy
