@@ -1,7 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
 #include <concepts>
+#include <expected>
 #include <optional>
 #include <sstream>
+#include <string_view>
 
 import prodigy.core;
 import prodigy.uci;
@@ -55,6 +58,49 @@ TEST_CASE("to_move") {
       .target = to_bitboard(Square::D6),
       .victim_origin = to_bitboard(Square::D5),
   }>();
+}
+
+TEST_CASE("valid move") {
+  STATIC_REQUIRE(parse_move("d2d4").value() == Move{
+                                                   .origin = Square::D2,
+                                                   .target = Square::D4,
+                                               });
+  STATIC_REQUIRE(parse_move("e7e8n").value() == Move{
+                                                    .origin = Square::E7,
+                                                    .target = Square::E8,
+                                                    .promotion = PieceType::KNIGHT,
+                                                });
+  STATIC_REQUIRE(parse_move("f7f8b").value() == Move{
+                                                    .origin = Square::F7,
+                                                    .target = Square::F8,
+                                                    .promotion = PieceType::BISHOP,
+                                                });
+  STATIC_REQUIRE(parse_move("g2h1r").value() == Move{
+                                                    .origin = Square::G2,
+                                                    .target = Square::H1,
+                                                    .promotion = PieceType::ROOK,
+                                                });
+  STATIC_REQUIRE(parse_move("h2g1q").value() == Move{
+                                                    .origin = Square::H2,
+                                                    .target = Square::G1,
+                                                    .promotion = PieceType::QUEEN,
+                                                });
+}
+
+TEST_CASE("invalid move") {
+  const auto [move, error] = GENERATE(table<std::string_view, std::string_view>({
+      {"", "Too few characters."},
+      {"a2a", "Too few characters."},
+      {"b7b8qq", "Too many characters."},
+      {"    ", "Invalid origin."},
+      {"c0c4", "Invalid origin."},
+      {"d2d9", "Invalid target."},
+      {"e7e8x", "Invalid promotion."},
+  }));
+  INFO(move);
+  const auto result = parse_move(move);
+  REQUIRE_FALSE(result.has_value());
+  REQUIRE(result.error() == error);
 }
 
 TEST_CASE("output stream") {
