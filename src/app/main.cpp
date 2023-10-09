@@ -11,12 +11,13 @@
 #include <asio/use_awaitable.hpp>
 #include <csignal>
 #include <exception>
+#include <expected>
+#include <iomanip>
 #include <iostream>
-#include <memory>
 #include <string>
+#include <string_view>
 
 import prodigy.engine;
-import prodigy.uci;
 
 int main() {
   try {
@@ -32,15 +33,19 @@ int main() {
         [&] -> asio::awaitable<void> {
           asio::posix::stream_descriptor input(io_context, ::dup(STDIN_FILENO));
           std::string buffer;
-          const prodigy::uci::Parser parser(std::make_unique<prodigy::Engine>());
+          prodigy::Engine engine;
           while (true) {
             const auto bytes_transferred =
                 co_await asio::async_read_until(input, asio::dynamic_buffer(buffer), '\n', asio::use_awaitable);
-            const auto end = buffer.begin() + bytes_transferred;
-            if (!parser.handle({buffer.begin(), end})) {
-              io_context.stop();
+            const auto line = std::string_view(buffer).substr(0, bytes_transferred - 1);
+            try {
+              if (!engine.handle(line)) {
+                io_context.stop();
+              }
+            } catch (const std::bad_expected_access<std::string_view>& exception) {
+              std::clog << "Error handling " << std::quoted(line) << ": " << exception.error() << '\n';
             }
-            buffer.erase(buffer.begin(), end);
+            buffer.erase(0, bytes_transferred);
           }
         },
         [](const std::exception_ptr exception_ptr) {

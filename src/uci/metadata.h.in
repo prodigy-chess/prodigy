@@ -1,0 +1,8 @@
+#pragma once
+
+namespace prodigy::uci {
+inline constexpr auto GIT_HASH = "@GIT_HASH@";
+inline constexpr auto PROJECT_AUTHOR = "Perry Jiang <me@perryjiang.com>";
+inline constexpr auto PROJECT_NAME = "@CMAKE_PROJECT_NAME@";
+inline constexpr auto PROJECT_VERSION = "@CMAKE_PROJECT_VERSION@";
+}  // namespace prodigy::uci
