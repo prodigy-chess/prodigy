@@ -19,3 +19,6 @@ mcts:
 - virtual loss
 - compressed edge
 - asio::threadpool instead of std::async
+
+misc:
+- std::clog -> spdlog
