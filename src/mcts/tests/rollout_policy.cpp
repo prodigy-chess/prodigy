@@ -14,7 +14,7 @@ void simulate(const EvaluationPolicy& rollout_policy, const float expected_rewar
 
 TEST_CASE("evaluation policy") {
   EvaluationPolicy rollout_policy;
-  rollout_policy.on_search_start(parse_fen(STARTING_FEN).value().board);
+  rollout_policy.on_search_start(STARTING_POSITION.board);
   rollout_policy.on_simulation_start();
   simulate<Color::WHITE>(rollout_policy, 0);
   rollout_policy.on_move<Color::WHITE>(QuietMove{

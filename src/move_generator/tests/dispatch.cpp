@@ -12,14 +12,13 @@ TEST_CASE("dispatch") {
     return dispatch(position, []<auto context>(const auto& node) { return std::pair(node, context); });
   };
   {
-    static constexpr auto position = parse_fen(STARTING_FEN).value();
-    static constexpr auto node = to_node(position);
-    STATIC_REQUIRE(node.first == Node{position.board, position.en_passant_target
-                                                          .transform([](const auto en_passant_target) {
-                                                            return shift(to_bitboard(en_passant_target),
-                                                                         Direction::SOUTH);
-                                                          })
-                                                          .value_or(Bitboard())});
+    static constexpr auto node = to_node(STARTING_POSITION);
+    STATIC_REQUIRE(node.first == Node{STARTING_POSITION.board, STARTING_POSITION.en_passant_target
+                                                                   .transform([](const auto en_passant_target) {
+                                                                     return shift(to_bitboard(en_passant_target),
+                                                                                  Direction::SOUTH);
+                                                                   })
+                                                                   .value_or(Bitboard())});
     STATIC_REQUIRE(node.second ==
                    Node::Context{
                        .side_to_move = Color::WHITE,
