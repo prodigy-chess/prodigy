@@ -163,4 +163,6 @@ inline constexpr auto KIWIPETE = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBB
   }
   return position;
 }
+
+inline constexpr auto STARTING_POSITION = parse_fen(STARTING_FEN).value();
 }  // namespace prodigy

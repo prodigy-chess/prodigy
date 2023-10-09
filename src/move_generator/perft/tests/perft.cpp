@@ -55,33 +55,32 @@ TEST_CASE("perft") {
 
 TEST_CASE("divide") {
   static_cast<void>(init());
-  REQUIRE(divide(parse_fen(STARTING_FEN).value(), Ply{4}).value() ==
-          std::map<uci::Move, std::uint64_t>{
-              {{.origin = Square::B1, .target = Square::A3}, 8'885},
-              {{.origin = Square::B1, .target = Square::C3}, 9'755},
-              {{.origin = Square::G1, .target = Square::F3}, 9'748},
-              {{.origin = Square::G1, .target = Square::H3}, 8'881},
-              {{.origin = Square::A2, .target = Square::A3}, 8'457},
-              {{.origin = Square::A2, .target = Square::A4}, 9'329},
-              {{.origin = Square::B2, .target = Square::B3}, 9'345},
-              {{.origin = Square::B2, .target = Square::B4}, 9'332},
-              {{.origin = Square::C2, .target = Square::C3}, 9'272},
-              {{.origin = Square::C2, .target = Square::C4}, 9'744},
-              {{.origin = Square::D2, .target = Square::D3}, 11'959},
-              {{.origin = Square::D2, .target = Square::D4}, 12'435},
-              {{.origin = Square::E2, .target = Square::E3}, 13'134},
-              {{.origin = Square::E2, .target = Square::E4}, 13'160},
-              {{.origin = Square::F2, .target = Square::F3}, 8'457},
-              {{.origin = Square::F2, .target = Square::F4}, 8'929},
-              {{.origin = Square::G2, .target = Square::G3}, 9'345},
-              {{.origin = Square::G2, .target = Square::G4}, 9'328},
-              {{.origin = Square::H2, .target = Square::H3}, 8'457},
-              {{.origin = Square::H2, .target = Square::H4}, 9'329},
-          });
+  REQUIRE(divide(STARTING_POSITION, Ply{4}).value() == std::map<uci::Move, std::uint64_t>{
+                                                           {{.origin = Square::B1, .target = Square::A3}, 8'885},
+                                                           {{.origin = Square::B1, .target = Square::C3}, 9'755},
+                                                           {{.origin = Square::G1, .target = Square::F3}, 9'748},
+                                                           {{.origin = Square::G1, .target = Square::H3}, 8'881},
+                                                           {{.origin = Square::A2, .target = Square::A3}, 8'457},
+                                                           {{.origin = Square::A2, .target = Square::A4}, 9'329},
+                                                           {{.origin = Square::B2, .target = Square::B3}, 9'345},
+                                                           {{.origin = Square::B2, .target = Square::B4}, 9'332},
+                                                           {{.origin = Square::C2, .target = Square::C3}, 9'272},
+                                                           {{.origin = Square::C2, .target = Square::C4}, 9'744},
+                                                           {{.origin = Square::D2, .target = Square::D3}, 11'959},
+                                                           {{.origin = Square::D2, .target = Square::D4}, 12'435},
+                                                           {{.origin = Square::E2, .target = Square::E3}, 13'134},
+                                                           {{.origin = Square::E2, .target = Square::E4}, 13'160},
+                                                           {{.origin = Square::F2, .target = Square::F3}, 8'457},
+                                                           {{.origin = Square::F2, .target = Square::F4}, 8'929},
+                                                           {{.origin = Square::G2, .target = Square::G3}, 9'345},
+                                                           {{.origin = Square::G2, .target = Square::G4}, 9'328},
+                                                           {{.origin = Square::H2, .target = Square::H3}, 8'457},
+                                                           {{.origin = Square::H2, .target = Square::H4}, 9'329},
+                                                       });
 }
 
 TEST_CASE("invalid") {
-  const auto result = perft(parse_fen(STARTING_FEN).value(), Ply{0});
+  const auto result = perft(STARTING_POSITION, Ply{0});
   REQUIRE_FALSE(result.has_value());
   REQUIRE(result.error() == "Invalid depth.");
 }

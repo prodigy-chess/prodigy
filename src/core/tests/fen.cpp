@@ -10,7 +10,7 @@ namespace prodigy {
 namespace {
 TEST_CASE("valid FEN") {
   STATIC_REQUIRE(parse_fen("8/8/8/8/8/8/8/8 w - - 0 0").value() == Position{});
-  STATIC_REQUIRE(parse_fen(STARTING_FEN).value() ==
+  STATIC_REQUIRE(STARTING_POSITION ==
                  Position{
                      .board{[] {
                        EnumMap<Square, std::optional<std::pair<Color, PieceType>>> piece_placement;
