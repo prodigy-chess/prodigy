@@ -38,6 +38,33 @@ TEST_CASE("start") {
     REQUIRE(algorithm.join().value() != nullptr);
   }
 
+  SECTION("poll without searching") {
+    const auto result = algorithm.poll();
+    REQUIRE_FALSE(result.has_value());
+    REQUIRE(result.error() == "No search pending.");
+  }
+
+  SECTION("poll without stop") {
+    static constexpr auto simulations = threads * 1'000;
+    REQUIRE(algorithm.start(position, simulations).has_value());
+    while (!algorithm.poll().value()) {
+    }
+    REQUIRE(algorithm.poll().value());
+    const auto tree = algorithm.join().value();
+    REQUIRE(tree != nullptr);
+    REQUIRE(tree->simulation_count() == simulations);
+  }
+
+  SECTION("stop between poll") {
+    REQUIRE(algorithm.start(position, std::nullopt).has_value());
+    REQUIRE(algorithm.poll().has_value());
+    REQUIRE(algorithm.stop().has_value());
+    while (!algorithm.poll().value()) {
+    }
+    REQUIRE(algorithm.poll().value());
+    REQUIRE(algorithm.join().value() != nullptr);
+  }
+
   SECTION("stop without searching") {
     const auto result = algorithm.stop();
     REQUIRE_FALSE(result.has_value());
