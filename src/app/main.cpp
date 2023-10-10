@@ -33,15 +33,13 @@ int main() {
         [&] -> asio::awaitable<void> {
           asio::posix::stream_descriptor input(io_context, ::dup(STDIN_FILENO));
           std::string buffer;
-          prodigy::Engine engine;
+          prodigy::Engine engine(io_context);
           while (true) {
             const auto bytes_transferred =
                 co_await asio::async_read_until(input, asio::dynamic_buffer(buffer), '\n', asio::use_awaitable);
             const auto line = std::string_view(buffer).substr(0, bytes_transferred - 1);
             try {
-              if (!engine.handle(line)) {
-                io_context.stop();
-              }
+              engine.handle(line);
             } catch (const std::bad_expected_access<std::string_view>& exception) {
               std::clog << "Error handling " << std::quoted(line) << ": " << exception.error() << '\n';
             }

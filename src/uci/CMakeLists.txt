@@ -4,7 +4,7 @@ target_sources(uci PUBLIC FILE_SET CXX_MODULES FILES engine.cppm move.cppm uci.c
 target_include_directories(uci PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 target_link_libraries(
   uci
-  PUBLIC core
+  PUBLIC asio core
   PRIVATE magic_enum
 )
 add_subdirectory(tests)
