@@ -1,6 +1,7 @@
 module;
 
 #include <algorithm>
+#include <asio/io_context.hpp>
 #include <iostream>
 #include <string_view>
 
@@ -11,7 +12,9 @@ module prodigy.uci;
 import prodigy.core;
 
 namespace prodigy::uci {
-bool Engine::handle(std::string_view command) {
+Engine::Engine(asio::io_context& io_context) noexcept : io_context_(io_context) {}
+
+void Engine::handle(std::string_view command) {
   static constexpr auto WHITESPACE = " \f\r\t\v";
   const auto pop_token = [&] -> std::string_view {
     const auto begin = command.find_first_not_of(WHITESPACE);
@@ -73,9 +76,9 @@ bool Engine::handle(std::string_view command) {
       break;
     }
     if (token == "quit") {
-      return false;
+      io_context_.stop();
+      break;
     }
   }
-  return true;
 }
 }  // namespace prodigy::uci

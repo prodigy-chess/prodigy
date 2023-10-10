@@ -1,3 +1,4 @@
+#include <asio/io_context.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
@@ -12,11 +13,15 @@ namespace prodigy::uci {
 namespace {
 class MockEngine : public Engine {
  public:
+  explicit MockEngine(asio::io_context& io_context) noexcept : Engine(io_context), io_context_(io_context) {}
+
   const Position& position() const noexcept { return position_; }
 
   const std::vector<Move>& moves() const noexcept { return moves_; }
 
   bool stopped() const noexcept { return stopped_; }
+
+  bool has_quit() const noexcept { return io_context_.stopped(); }
 
  private:
   void set_position(const Position& position) override { position_ = position; }
@@ -25,13 +30,15 @@ class MockEngine : public Engine {
 
   void stop() override { stopped_ = true; }
 
+  const asio::io_context& io_context_;
   Position position_;
   std::vector<Move> moves_;
   bool stopped_ = false;
 };
 
 TEST_CASE("parse") {
-  MockEngine engine;
+  asio::io_context io_context;
+  MockEngine engine(io_context);
   SECTION("position") {
     const auto [command, position, moves] = GENERATE(table<std::string, Position, std::vector<Move>>({
         {
@@ -109,16 +116,20 @@ TEST_CASE("parse") {
     }));
     INFO(command);
     REQUIRE(engine.moves().empty());
-    REQUIRE(engine.handle(command));
+    engine.handle(command);
     REQUIRE(engine.position() == position);
     REQUIRE_THAT(engine.moves(), Catch::Matchers::Equals(moves));
   }
   SECTION("stop") {
     REQUIRE_FALSE(engine.stopped());
-    REQUIRE(engine.handle("stop"));
+    engine.handle("stop");
     REQUIRE(engine.stopped());
   }
-  SECTION("quit") { REQUIRE_FALSE(engine.handle("quit")); }
+  SECTION("quit") {
+    REQUIRE_FALSE(engine.has_quit());
+    engine.handle("quit");
+    REQUIRE(engine.has_quit());
+  }
 }
 }  // namespace
 }  // namespace prodigy::uci
