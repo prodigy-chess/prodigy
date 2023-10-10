@@ -2,6 +2,7 @@ module;
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <cstddef>
 #include <expected>
 #include <functional>
@@ -82,6 +83,16 @@ class Algorithm {
     }
     tree = std::move(search_tree);
     return {};
+  }
+
+  [[nodiscard]] std::expected<bool, std::string_view> poll() const noexcept {
+    if (!search_state_.has_value()) {
+      return std::unexpected("No search pending.");
+    }
+    return std::ranges::all_of(search_state_->searches, [](const auto& search) {
+      using namespace std::literals::chrono_literals;
+      return search.wait_for(0ns) == std::future_status::ready;
+    });
   }
 
   [[nodiscard]] std::expected<void, std::string_view> stop() noexcept {
