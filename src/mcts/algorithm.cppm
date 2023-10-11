@@ -87,7 +87,7 @@ class Algorithm {
 
   [[nodiscard]] std::expected<bool, std::string_view> poll() const noexcept {
     if (!search_state_.has_value()) {
-      return std::unexpected("No search pending.");
+      return std::unexpected("Not searching.");
     }
     return std::ranges::all_of(search_state_->searches, [](const auto& search) {
       using namespace std::literals::chrono_literals;

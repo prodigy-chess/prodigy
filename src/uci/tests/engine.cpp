@@ -4,6 +4,7 @@
 #include <catch2/matchers/catch_matchers_vector.hpp>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 import prodigy.core;
@@ -13,32 +14,39 @@ namespace prodigy::uci {
 namespace {
 class MockEngine : public Engine {
  public:
+  enum class State {
+    IDLE,
+    SEARCHING,
+    QUIT,
+  };
+
   explicit MockEngine(asio::io_context& io_context) noexcept : Engine(io_context), io_context_(io_context) {}
 
   const Position& position() const noexcept { return position_; }
 
   const std::vector<Move>& moves() const noexcept { return moves_; }
 
-  bool stopped() const noexcept { return stopped_; }
-
-  bool has_quit() const noexcept { return io_context_.stopped(); }
+  State state() const noexcept { return io_context_.stopped() ? State::QUIT : state_; }
 
  private:
   void set_position(const Position& position) override { position_ = position; }
 
   void apply(const Move move) override { moves_.push_back(move); }
 
-  void stop() override { stopped_ = true; }
+  void go() override { REQUIRE(std::exchange(state_, State::SEARCHING) != State::QUIT); }
+
+  void stop() override { REQUIRE(std::exchange(state_, State::IDLE) != State::QUIT); }
 
   const asio::io_context& io_context_;
   Position position_;
   std::vector<Move> moves_;
-  bool stopped_ = false;
+  State state_ = State::IDLE;
 };
 
 TEST_CASE("parse") {
   asio::io_context io_context;
   MockEngine engine(io_context);
+  REQUIRE(engine.state() == MockEngine::State::IDLE);
   SECTION("position") {
     const auto [command, position, moves] = GENERATE(table<std::string, Position, std::vector<Move>>({
         {
@@ -120,15 +128,31 @@ TEST_CASE("parse") {
     REQUIRE(engine.position() == position);
     REQUIRE_THAT(engine.moves(), Catch::Matchers::Equals(moves));
   }
+  SECTION("go") {
+    engine.handle("go");
+    REQUIRE(engine.state() == MockEngine::State::SEARCHING);
+  }
   SECTION("stop") {
-    REQUIRE_FALSE(engine.stopped());
     engine.handle("stop");
-    REQUIRE(engine.stopped());
+    REQUIRE(engine.state() == MockEngine::State::IDLE);
   }
   SECTION("quit") {
-    REQUIRE_FALSE(engine.has_quit());
     engine.handle("quit");
-    REQUIRE(engine.has_quit());
+    REQUIRE(engine.state() == MockEngine::State::QUIT);
+  }
+  SECTION("end to end") {
+    engine.handle("position startpos");
+    REQUIRE(engine.position() == STARTING_POSITION);
+    REQUIRE(engine.moves().empty());
+    REQUIRE(engine.state() == MockEngine::State::IDLE);
+    engine.handle("stop");
+    REQUIRE(engine.state() == MockEngine::State::IDLE);
+    engine.handle("go");
+    REQUIRE(engine.state() == MockEngine::State::SEARCHING);
+    engine.handle("stop");
+    REQUIRE(engine.state() == MockEngine::State::IDLE);
+    engine.handle("quit");
+    REQUIRE(engine.state() == MockEngine::State::QUIT);
   }
 }
 }  // namespace

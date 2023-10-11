@@ -41,7 +41,7 @@ TEST_CASE("start") {
   SECTION("poll without searching") {
     const auto result = algorithm.poll();
     REQUIRE_FALSE(result.has_value());
-    REQUIRE(result.error() == "No search pending.");
+    REQUIRE(result.error() == "Not searching.");
   }
 
   SECTION("poll without stop") {
