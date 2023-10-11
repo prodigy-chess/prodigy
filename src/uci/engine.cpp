@@ -66,6 +66,7 @@ void Engine::handle(std::string_view command) {
     }
     if (token == "go") {
       // TODO
+      go();
       break;
     }
     if (token == "stop") {

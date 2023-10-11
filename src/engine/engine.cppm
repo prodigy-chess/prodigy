@@ -1,11 +1,11 @@
+module;
+
+#include <asio/steady_timer.hpp>
+
 export module prodigy.engine;
 
 import prodigy.core;
 import prodigy.uci;
-
-namespace asio {
-class io_context;
-}
 
 export namespace prodigy {
 class Engine : public uci::Engine {
@@ -17,6 +17,10 @@ class Engine : public uci::Engine {
 
   void apply(uci::Move) override;
 
+  void go() override;
+
   void stop() override;
+
+  asio::steady_timer timer_;
 };
 }  // namespace prodigy

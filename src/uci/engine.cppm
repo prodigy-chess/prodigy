@@ -26,6 +26,8 @@ class Engine {
 
   virtual void apply(Move) = 0;
 
+  virtual void go() = 0;
+
   virtual void stop() = 0;
 
   asio::io_context& io_context_;
