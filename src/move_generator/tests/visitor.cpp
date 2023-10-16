@@ -1,6 +1,4 @@
-#include <array>
 #include <catch2/catch_test_macros.hpp>
-#include <optional>
 #include <string_view>
 
 import prodigy.core;
@@ -14,12 +12,7 @@ constexpr Position to_position(const Node& node, const Ply halfmove_clock) noexc
       .board = node.board,
       .side_to_move = child_context.side_to_move,
       .castling_rights = child_context.castling_rights,
-      .en_passant_target =
-          child_context.can_en_passant
-              ? std::optional(square_of(
-                    unsafe_shift(node.en_passant_victim_origin,
-                                 !child_context.side_to_move == Color::WHITE ? Direction::SOUTH : Direction::NORTH)))
-              : std::nullopt,
+      .en_passant_victim_origin = node.en_passant_victim_origin,
       .halfmove_clock = halfmove_clock,
       .fullmove_number = 1,
   };

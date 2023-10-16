@@ -1,4 +1,3 @@
-#include <array>
 #include <catch2/catch_test_macros.hpp>
 #include <utility>
 
@@ -13,12 +12,7 @@ TEST_CASE("dispatch") {
   };
   {
     static constexpr auto node = to_node(STARTING_POSITION);
-    STATIC_REQUIRE(node.first == Node{STARTING_POSITION.board, STARTING_POSITION.en_passant_target
-                                                                   .transform([](const auto en_passant_target) {
-                                                                     return shift(to_bitboard(en_passant_target),
-                                                                                  Direction::SOUTH);
-                                                                   })
-                                                                   .value_or(Bitboard())});
+    STATIC_REQUIRE(node.first == Node{STARTING_POSITION.board, STARTING_POSITION.en_passant_victim_origin});
     STATIC_REQUIRE(node.second ==
                    Node::Context{
                        .side_to_move = Color::WHITE,
@@ -30,12 +24,7 @@ TEST_CASE("dispatch") {
   {
     static constexpr auto position = parse_fen("8/8/8/8/8/8/8/8 b - e3 0 1").value();
     static constexpr auto node = to_node(position);
-    STATIC_REQUIRE(node.first == Node{position.board, position.en_passant_target
-                                                          .transform([](const auto en_passant_target) {
-                                                            return shift(to_bitboard(en_passant_target),
-                                                                         Direction::NORTH);
-                                                          })
-                                                          .value_or(Bitboard())});
+    STATIC_REQUIRE(node.first == Node{position.board, position.en_passant_victim_origin});
     STATIC_REQUIRE(node.second == Node::Context{
                                       .side_to_move = Color::BLACK,
                                       .castling_rights = CastlingRights(),
