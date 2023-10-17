@@ -61,7 +61,7 @@ class Algorithm {
   }
 
   [[nodiscard]] std::expected<void, std::string_view> start(const Position& position,
-                                                            const std::optional<SimulationCount> simulations) noexcept {
+                                                            const std::optional<std::size_t> simulations) noexcept {
     if (search_state_.has_value()) {
       return std::unexpected("Already searching.");
     }
@@ -69,8 +69,9 @@ class Algorithm {
     auto& [stop, tree, searches] = search_state_.emplace();
     for (const auto simulations_per_searcher = simulations
                                                    .transform([&](const auto simulations) {
-                                                     return std::min<SimulationCount>(simulations / searchers_.size(),
-                                                                                      max_simulations_per_searcher_);
+                                                     return std::min<std::common_type_t<std::size_t, SimulationCount>>(
+                                                         simulations / searchers_.size(),
+                                                         max_simulations_per_searcher_);
                                                    })
                                                    .value_or(max_simulations_per_searcher_);
          auto& searcher : searchers_) {
