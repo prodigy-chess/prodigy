@@ -1,22 +1,21 @@
 module;
 
 #include <cstdint>
-#include <optional>
 
 export module prodigy.core:position;
 
+import :bitboard;
 import :board;
 import :castling_rights;
 import :color;
 import :ply;
-import :square;
 
 export namespace prodigy {
 struct Position {
   Board board;
   Color side_to_move;
   CastlingRights castling_rights;
-  std::optional<Square> en_passant_target;
+  Bitboard en_passant_victim_origin;
   Ply halfmove_clock;
   std::uint16_t fullmove_number;
 

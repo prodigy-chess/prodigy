@@ -1,6 +1,5 @@
 module;
 
-#include <array>
 #include <cstdint>
 #include <expected>
 #include <map>
