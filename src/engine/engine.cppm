@@ -17,7 +17,7 @@ class Engine : public uci::Engine {
 
   void apply(uci::Move) override;
 
-  void go() override;
+  void go(const uci::Go&) override;
 
   void stop() override;
 

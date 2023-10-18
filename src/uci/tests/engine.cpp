@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
+#include <chrono>
 #include <optional>
 #include <string>
 #include <utility>
@@ -26,6 +27,11 @@ class MockEngine : public Engine {
 
   const std::vector<Move>& moves() const noexcept { return moves_; }
 
+  const Go& go_params() const noexcept {
+    REQUIRE(go_params_.has_value());
+    return *go_params_;
+  }
+
   State state() const noexcept { return io_context_.stopped() ? State::QUIT : state_; }
 
  private:
@@ -33,13 +39,20 @@ class MockEngine : public Engine {
 
   void apply(const Move move) override { moves_.push_back(move); }
 
-  void go() override { REQUIRE(std::exchange(state_, State::SEARCHING) != State::QUIT); }
+  void go(const Go& params) override {
+    REQUIRE(std::exchange(state_, State::SEARCHING) != State::QUIT);
+    go_params_.emplace(params);
+  }
 
-  void stop() override { REQUIRE(std::exchange(state_, State::IDLE) != State::QUIT); }
+  void stop() override {
+    REQUIRE(std::exchange(state_, State::IDLE) != State::QUIT);
+    go_params_.reset();
+  }
 
   const asio::io_context& io_context_;
   Position position_;
   std::vector<Move> moves_;
+  std::optional<Go> go_params_;
   State state_ = State::IDLE;
 };
 
@@ -129,8 +142,51 @@ TEST_CASE("parse") {
     REQUIRE_THAT(engine.moves(), Catch::Matchers::Equals(moves));
   }
   SECTION("go") {
+    using namespace std::literals::chrono_literals;
+    const auto [command, go_params] = GENERATE(table<std::string_view, Go>({
+        {
+            "go infinite searchmoves e2e4 e7e5",
+            {
+                .search_moves =
+                    {
+                        parse_move("e2e4").value(),
+                        parse_move("e7e5").value(),
+                    },
+                .infinite = true,
+            },
+        },
+        {
+            "go searchmoves e2e4 ponder wtime 1 btime 2 winc 3 binc 4 movestogo 5 depth 6 nodes 7 mate 8 movetime 9",
+            {
+                .search_moves =
+                    {
+                        parse_move("e2e4").value(),
+                    },
+                .ponder = true,
+                .time_remaining =
+                    {
+                        1ms,
+                        2ms,
+                    },
+                .increment =
+                    {
+                        3ms,
+                        4ms,
+                    },
+                .moves_to_go = 5,
+                .depth = Ply{6},
+                .nodes = 7,
+                .mate = 8,
+                .move_time = 9ms,
+            },
+        },
+    }));
+    engine.handle(command);
+    REQUIRE(engine.state() == MockEngine::State::SEARCHING);
+    REQUIRE(engine.go_params() == go_params);
     engine.handle("go");
     REQUIRE(engine.state() == MockEngine::State::SEARCHING);
+    REQUIRE(engine.go_params() == Go());
   }
   SECTION("stop") {
     engine.handle("stop");

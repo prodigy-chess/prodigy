@@ -6,6 +6,7 @@ export module prodigy.uci:engine;
 
 import prodigy.core;
 
+import :go;
 import :move;
 
 namespace asio {
@@ -26,7 +27,7 @@ class Engine {
 
   virtual void apply(Move) = 0;
 
-  virtual void go() = 0;
+  virtual void go(const Go&) = 0;
 
   virtual void stop() = 0;
 

@@ -23,5 +23,7 @@ struct Go {
   std::optional<std::size_t> mate;
   std::optional<std::chrono::milliseconds> move_time;
   bool infinite = false;
+
+  friend constexpr bool operator==(const Go&, const Go&) = default;
 };
 }  // namespace prodigy::uci
