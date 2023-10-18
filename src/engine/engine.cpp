@@ -14,7 +14,7 @@ void Engine::set_position(const Position&) {}
 
 void Engine::apply(uci::Move) {}
 
-void Engine::go() {}
+void Engine::go(const uci::Go&) {}
 
 void Engine::stop() {}
 }  // namespace prodigy
