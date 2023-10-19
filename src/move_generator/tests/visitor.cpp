@@ -16,9 +16,9 @@ constexpr Position to_position(const Node& node, const Ply halfmove_clock) noexc
       .castling_rights = child_context.castling_rights,
       .en_passant_target =
           child_context.can_en_passant
-              ? std::optional(
-                    square_of(shift(node.en_passant_victim_origin,
-                                    !child_context.side_to_move == Color::WHITE ? Direction::SOUTH : Direction::NORTH)))
+              ? std::optional(square_of(
+                    unsafe_shift(node.en_passant_victim_origin,
+                                 !child_context.side_to_move == Color::WHITE ? Direction::SOUTH : Direction::NORTH)))
               : std::nullopt,
       .halfmove_clock = halfmove_clock,
       .fullmove_number = 1,
