@@ -22,3 +22,7 @@ mcts:
 
 misc:
 - std::clog -> spdlog
+
+engine:
+- tests
+- avoid walking all moves to apply a single move
