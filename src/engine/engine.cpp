@@ -1,7 +1,10 @@
 module;
 
+#include <algorithm>
 #include <asio/steady_timer.hpp>
+#include <chrono>
 #include <concepts>
+#include <cstddef>
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -13,7 +16,10 @@ import prodigy.move_generator;
 import prodigy.uci;
 
 namespace prodigy {
-Engine::Engine(asio::io_context& io_context) : uci::Engine(io_context), timer_(io_context) {}
+Engine::Engine(asio::io_context& io_context, const std::chrono::steady_clock::duration poll_interval)
+    : uci::Engine(io_context), timer_(io_context), poll_interval_(poll_interval) {}
+
+void Engine::set_position(const Position& position) { position_ = position; }
 
 namespace {
 class Visitor : public move_generator::Visitor<Visitor> {
@@ -83,15 +89,43 @@ class Visitor : public move_generator::Visitor<Visitor> {
 };
 }  // namespace
 
-void Engine::set_position(const Position& position) { position_ = position; }
-
 void Engine::apply(const uci::Move move) {
   move_generator::dispatch(position_, [&]<auto context>(const auto& node) {
     move_generator::walk<context>(node, Visitor(position_, move));
   });
 }
 
-void Engine::go(const uci::Go&) {}
+void Engine::go(const uci::Go& params) {
+  if (!params.infinite) {
+    search_expiry_.emplace(
+        std::chrono::steady_clock::now() +
+        params.move_time
+            .or_else([&] {
+              return params.time_remaining[position_.side_to_move].transform([&](const auto time_remaining) {
+                return time_remaining / static_cast<std::ptrdiff_t>(params.moves_to_go.value_or(40UZ));
+              });
+            })
+            .value());
+  }
+  async_poll();
+}
 
 void Engine::stop() {}
+
+void Engine::async_poll() {
+  timer_.expires_after(poll_interval_);
+  if (search_expiry_.has_value()) {
+    timer_.expires_at(std::min(*search_expiry_, timer_.expiry()));
+  }
+  timer_.async_wait([&](const asio::error_code& error) {
+    if (error) {
+      return;
+    }
+    if (search_expiry_.has_value() && *search_expiry_ < std::chrono::steady_clock::now()) {
+      stop();
+      return;
+    }
+    async_poll();
+  });
+}
 }  // namespace prodigy

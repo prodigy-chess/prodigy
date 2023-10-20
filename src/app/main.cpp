@@ -9,6 +9,7 @@
 #include <asio/read_until.hpp>
 #include <asio/signal_set.hpp>
 #include <asio/use_awaitable.hpp>
+#include <chrono>
 #include <csignal>
 #include <exception>
 #include <expected>
@@ -31,9 +32,10 @@ int main() {
     asio::co_spawn(
         io_context,
         [&] -> asio::awaitable<void> {
+          using namespace std::literals::chrono_literals;
+          prodigy::Engine engine(io_context, 100ms);
           asio::posix::stream_descriptor input(io_context, ::dup(STDIN_FILENO));
           std::string buffer;
-          prodigy::Engine engine(io_context);
           while (true) {
             const auto bytes_transferred =
                 co_await asio::async_read_until(input, asio::dynamic_buffer(buffer), '\n', asio::use_awaitable);
