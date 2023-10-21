@@ -15,10 +15,13 @@
 #include <expected>
 #include <iomanip>
 #include <iostream>
+#include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 
 import prodigy.engine;
+import prodigy.mcts;
 import prodigy.move_generator;
 
 int main() {
@@ -36,7 +39,11 @@ int main() {
         io_context,
         [&] -> asio::awaitable<void> {
           using namespace std::literals::chrono_literals;
-          Engine engine(io_context, 100ms);
+          Engine engine(
+              io_context,
+              std::make_unique<MCTSStrategy<mcts::EvaluationPolicy, mcts::UCTPolicy>>(
+                  std::nullopt, 1ULL << 31, [] { return mcts::EvaluationPolicy(); }, [] { return mcts::UCTPolicy(4); }),
+              100ms);
           asio::posix::stream_descriptor input(io_context, ::dup(STDIN_FILENO));
           std::string buffer;
           while (true) {

@@ -21,9 +21,8 @@ mcts:
 - asio::threadpool instead of std::async
 - check remaining memory before each simulation
 
+engine:
+- avoid walking all moves to apply a single move
+
 misc:
 - std::clog -> spdlog
-
-engine:
-- tests
-- avoid walking all moves to apply a single move

@@ -2,9 +2,12 @@ module;
 
 #include <algorithm>
 #include <asio/steady_timer.hpp>
+#include <cassert>
 #include <chrono>
 #include <concepts>
 #include <cstddef>
+#include <iostream>
+#include <memory>
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -16,8 +19,11 @@ import prodigy.move_generator;
 import prodigy.uci;
 
 namespace prodigy {
-Engine::Engine(asio::io_context& io_context, const std::chrono::steady_clock::duration poll_interval)
-    : uci::Engine(io_context), timer_(io_context), poll_interval_(poll_interval) {}
+Engine::Engine(asio::io_context& io_context, std::unique_ptr<Strategy> strategy,
+               const std::chrono::steady_clock::duration poll_interval)
+    : uci::Engine(io_context), timer_(io_context), strategy_(std::move(strategy)), poll_interval_(poll_interval) {
+  assert(strategy_ != nullptr);
+}
 
 void Engine::set_position(const Position& position) { position_ = position; }
 
@@ -96,6 +102,7 @@ void Engine::apply(const uci::Move move) {
 }
 
 void Engine::go(const uci::Go& params) {
+  strategy_->start(position_, params.nodes);
   if (params.infinite) {
     search_expiry_.reset();
   } else {
@@ -112,7 +119,7 @@ void Engine::go(const uci::Go& params) {
   async_poll();
 }
 
-void Engine::stop() {}
+void Engine::stop() { strategy_->stop(); }
 
 void Engine::async_poll() {
   timer_.expires_after(poll_interval_);
@@ -123,8 +130,13 @@ void Engine::async_poll() {
     if (error) {
       return;
     }
-    if (search_expiry_.has_value() && *search_expiry_ < std::chrono::steady_clock::now()) {
+    if ((search_expiry_.has_value() && *search_expiry_ < std::chrono::steady_clock::now()) || strategy_->poll()) {
       stop();
+      if (const auto move = strategy_->join(); move.has_value()) {
+        std::cout << "bestmove " << *move << std::endl;
+      } else {
+        std::cout << "bestmove 0000" << std::endl;
+      }
       return;
     }
     async_poll();
