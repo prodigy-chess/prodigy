@@ -2,6 +2,7 @@ module;
 
 #include <asio/steady_timer.hpp>
 #include <chrono>
+#include <memory>
 #include <optional>
 
 export module prodigy.engine;
@@ -15,7 +16,7 @@ import prodigy.uci;
 export namespace prodigy {
 class Engine final : public uci::Engine {
  public:
-  explicit Engine(asio::io_context&, std::chrono::steady_clock::duration poll_interval);
+  explicit Engine(asio::io_context&, std::unique_ptr<Strategy>, std::chrono::steady_clock::duration poll_interval);
 
  private:
   void set_position(const Position&) override;
@@ -30,6 +31,7 @@ class Engine final : public uci::Engine {
 
   Position position_;
   asio::steady_timer timer_;
+  const std::unique_ptr<Strategy> strategy_;
   const std::chrono::steady_clock::duration poll_interval_;
   std::optional<const std::chrono::steady_clock::time_point> search_expiry_;
 };
