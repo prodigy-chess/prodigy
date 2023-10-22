@@ -19,9 +19,12 @@
 #include <string_view>
 
 import prodigy.engine;
+import prodigy.move_generator;
 
 int main() {
   try {
+    using namespace prodigy;
+    move_generator::init().value();
     asio::io_context io_context(1);
     asio::signal_set signal_set(io_context, SIGINT, SIGTERM);
     signal_set.async_wait([&](const asio::error_code& error, auto&&...) {
@@ -33,7 +36,7 @@ int main() {
         io_context,
         [&] -> asio::awaitable<void> {
           using namespace std::literals::chrono_literals;
-          prodigy::Engine engine(io_context, 100ms);
+          Engine engine(io_context, 100ms);
           asio::posix::stream_descriptor input(io_context, ::dup(STDIN_FILENO));
           std::string buffer;
           while (true) {
@@ -44,6 +47,10 @@ int main() {
               engine.handle(line);
             } catch (const std::bad_expected_access<std::string_view>& exception) {
               std::clog << "Error handling " << std::quoted(line) << ": " << exception.error() << '\n';
+            } catch (const std::exception& exception) {
+              std::clog << "Error handling " << std::quoted(line) << ": " << exception.what() << '\n';
+            } catch (...) {
+              std::clog << "Error handling " << std::quoted(line) << '\n';
             }
             buffer.erase(0, bytes_transferred);
           }

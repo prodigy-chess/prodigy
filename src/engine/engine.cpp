@@ -96,7 +96,9 @@ void Engine::apply(const uci::Move move) {
 }
 
 void Engine::go(const uci::Go& params) {
-  if (!params.infinite) {
+  if (params.infinite) {
+    search_expiry_.reset();
+  } else {
     search_expiry_.emplace(
         std::chrono::steady_clock::now() +
         params.move_time

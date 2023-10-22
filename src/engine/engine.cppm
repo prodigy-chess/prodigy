@@ -6,11 +6,14 @@ module;
 
 export module prodigy.engine;
 
+export import :mcts_strategy;
+export import :strategy;
+
 import prodigy.core;
 import prodigy.uci;
 
 export namespace prodigy {
-class Engine : public uci::Engine {
+class Engine final : public uci::Engine {
  public:
   explicit Engine(asio::io_context&, std::chrono::steady_clock::duration poll_interval);
 

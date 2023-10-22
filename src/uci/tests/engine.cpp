@@ -23,7 +23,10 @@ class MockEngine : public Engine {
 
   explicit MockEngine(asio::io_context& io_context) noexcept : Engine(io_context), io_context_(io_context) {}
 
-  const Position& position() const noexcept { return position_; }
+  const Position& position() const noexcept {
+    REQUIRE(position_.has_value());
+    return *position_;
+  }
 
   const std::vector<Move>& moves() const noexcept { return moves_; }
 
@@ -35,7 +38,10 @@ class MockEngine : public Engine {
   State state() const noexcept { return io_context_.stopped() ? State::QUIT : state_; }
 
  private:
-  void set_position(const Position& position) override { position_ = position; }
+  void set_position(const Position& position) override {
+    position_.emplace(position);
+    moves_.clear();
+  }
 
   void apply(const Move move) override { moves_.push_back(move); }
 
@@ -50,9 +56,9 @@ class MockEngine : public Engine {
   }
 
   const asio::io_context& io_context_;
-  Position position_;
+  std::optional<const Position> position_;
   std::vector<Move> moves_;
-  std::optional<Go> go_params_;
+  std::optional<const Go> go_params_;
   State state_ = State::IDLE;
 };
 
@@ -140,6 +146,9 @@ TEST_CASE("parse") {
     engine.handle(command);
     REQUIRE(engine.position() == position);
     REQUIRE_THAT(engine.moves(), Catch::Matchers::Equals(moves));
+    engine.handle("position fen 8/8/8/8/8/8/8/8 w - - 0 0");
+    REQUIRE(engine.position() == Position());
+    REQUIRE(engine.moves().empty());
   }
   SECTION("go") {
     using namespace std::literals::chrono_literals;

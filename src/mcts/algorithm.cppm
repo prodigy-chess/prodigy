@@ -45,7 +45,7 @@ class Algorithm {
           return searchers;
         }()),
         max_simulations_per_searcher_(
-            std::min<std::common_type_t<std::size_t, SimulationCount>>(arena_bytes / (sizeof(Node) + sizeof(Edge) * 43),
+            std::min<std::common_type_t<std::size_t, SimulationCount>>(arena_bytes / (sizeof(Node) + sizeof(Edge) * 45),
                                                                        std::numeric_limits<SimulationCount>::max()) /
             searchers_.size()) {}
 
@@ -91,8 +91,7 @@ class Algorithm {
       return std::unexpected("Not searching.");
     }
     return std::ranges::all_of(search_state_->searches, [](const auto& search) {
-      using namespace std::literals::chrono_literals;
-      return search.wait_for(0ns) == std::future_status::ready;
+      return search.wait_for(std::chrono::steady_clock::duration::zero()) == std::future_status::ready;
     });
   }
 
@@ -100,9 +99,7 @@ class Algorithm {
     if (!search_state_.has_value()) {
       return std::unexpected("Not searching.");
     }
-    if (search_state_->stop.test_and_set(std::memory_order_relaxed)) {
-      return std::unexpected("Already stopping.");
-    }
+    search_state_->stop.test_and_set(std::memory_order_relaxed);
     return {};
   }
 

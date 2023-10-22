@@ -72,11 +72,9 @@ TEST_CASE("start") {
   }
 
   SECTION("multiple stops") {
-    REQUIRE(algorithm.start(position, 1'000'000).has_value());
+    REQUIRE(algorithm.start(position, std::nullopt).has_value());
     REQUIRE(algorithm.stop().has_value());
-    const auto result = algorithm.stop();
-    REQUIRE_FALSE(result.has_value());
-    REQUIRE(result.error() == "Already stopping.");
+    REQUIRE(algorithm.stop().has_value());
     REQUIRE(algorithm.join().value() != nullptr);
   }
 
