@@ -24,7 +24,7 @@ CPMDeclarePackage(
 
 CPMDeclarePackage(
   magic_enum
-  VERSION 0.9.3
+  VERSION 0.9.5
   GITHUB_REPOSITORY Neargye/magic_enum
   SYSTEM YES
   EXCLUDE_FROM_ALL YES
