@@ -12,8 +12,7 @@ TEST_CASE("start") {
   static constexpr auto arena_bytes = 1UZ << 31;
   static constexpr auto position = parse_fen(KIWIPETE).value();
   static_cast<void>(move_generator::init());
-  Algorithm algorithm(
-      threads, arena_bytes, [] { return EvaluationPolicy(); }, [] { return UCTPolicy(2); });
+  Algorithm algorithm(threads, arena_bytes, [] { return EvaluationPolicy(); }, [] { return UCTPolicy(2); });
 
   SECTION("simulations specified") {
     static constexpr auto simulations = threads * 1'000;
