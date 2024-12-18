@@ -40,7 +40,7 @@ CPMDeclarePackage(
 
 CPMDeclarePackage(
   spdlog
-  VERSION 1.14.1
+  VERSION 1.15.0
   GITHUB_REPOSITORY gabime/spdlog
   SYSTEM YES
   EXCLUDE_FROM_ALL YES
