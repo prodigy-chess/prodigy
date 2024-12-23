@@ -17,11 +17,13 @@ template <typename T>
 concept RolloutPolicy = requires(const Position position) {
   {
     move_generator::dispatch(position, []<auto context>(const auto& node) {
-      auto&& rollout_policy = std::declval<T>();
+      // TODO: try std::declval with T and Edge again
+      T rollout_policy;
       rollout_policy.on_search_start(node.board);
       rollout_policy.on_simulation_start();
-      std::declval<Edge>().visit_move<context.side_to_move>(
-          [&](const auto& move, auto&&...) { rollout_policy.template on_move<context.side_to_move>(move); });
+      Edge(QuietMove()).visit_move<context.side_to_move>([&](const auto& move, auto&&...) {
+        rollout_policy.template on_move<context.side_to_move>(move);
+      });
       return rollout_policy.template simulate<!context.side_to_move>();
     })
   } -> std::same_as<float>;

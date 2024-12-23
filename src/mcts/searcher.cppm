@@ -4,6 +4,7 @@ module;
 #include <concepts>
 #include <cstddef>
 #include <functional>
+#include <ranges>
 #include <utility>
 #include <vector>
 
@@ -38,9 +39,8 @@ class alignas(64) Searcher {
         path_ = {tree};
         node_ = node;
         auto reward = traverse<context>(tree.root());
-        // TODO: use std::views::reverse with Clang 17.
-        for (auto it = path_.rbegin(); it != path_.rend(); ++it) {
-          it->get().on_simulation_complete(reward);
+        for (auto statistics : std::views::reverse(path_)) {
+          statistics.get().on_simulation_complete(reward);
           reward = -reward;
         }
       }

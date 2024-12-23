@@ -3,6 +3,7 @@
 #include <catch2/generators/catch_generators.hpp>
 #include <chrono>
 #include <cstddef>
+#include <format>
 #include <memory>
 #include <optional>
 #include <string>
@@ -60,7 +61,6 @@ TEST_CASE("handle") {
   auto strategy_ptr = std::make_unique<MockStrategy>();
   const auto& strategy = *strategy_ptr;
   Engine engine(io_context, std::move(strategy_ptr), std::chrono::steady_clock::duration::zero());
-  // TODO: use std::format with Clang 17.
   const auto [command, expected_fen] = GENERATE(table<std::string, std::string_view>({
       {
           "position startpos",
@@ -95,39 +95,39 @@ TEST_CASE("handle") {
           KIWIPETE,
       },
       {
-          std::string("position fen ") + KIWIPETE + " moves a2a4",
+          std::format("position fen {} moves a2a4", KIWIPETE),
           "r3k2r/p1ppqpb1/bn2pnp1/3PN3/Pp2P3/2N2Q1p/1PPBBPPP/R3K2R b KQkq a3 0 1",
       },
       {
-          std::string("position fen ") + KIWIPETE + " moves a2a4 b4a3",
+          std::format("position fen {} moves a2a4 b4a3", KIWIPETE),
           "r3k2r/p1ppqpb1/bn2pnp1/3PN3/4P3/p1N2Q1p/1PPBBPPP/R3K2R w KQkq - 0 2",
       },
       {
-          std::string("position fen ") + KIWIPETE + " moves a2a4 b4a3 e1c1",
+          std::format("position fen {} moves a2a4 b4a3 e1c1", KIWIPETE),
           "r3k2r/p1ppqpb1/bn2pnp1/3PN3/4P3/p1N2Q1p/1PPBBPPP/2KR3R b kq - 1 2",
       },
       {
-          std::string("position fen ") + KIWIPETE + " moves a2a4 b4a3 e1c1 h8g8",
+          std::format("position fen {} moves a2a4 b4a3 e1c1 h8g8", KIWIPETE),
           "r3k1r1/p1ppqpb1/bn2pnp1/3PN3/4P3/p1N2Q1p/1PPBBPPP/2KR3R w q - 2 3",
       },
       {
-          std::string("position fen ") + KIWIPETE + " moves a2a4 b4a3 e1c1 h8g8 d5d6",
+          std::format("position fen {} moves a2a4 b4a3 e1c1 h8g8 d5d6", KIWIPETE),
           "r3k1r1/p1ppqpb1/bn1Ppnp1/4N3/4P3/p1N2Q1p/1PPBBPPP/2KR3R b q - 0 3",
       },
       {
-          std::string("position fen ") + KIWIPETE + " moves a2a4 b4a3 e1c1 h8g8 d5d6 e8c8",
+          std::format("position fen {} moves a2a4 b4a3 e1c1 h8g8 d5d6 e8c8", KIWIPETE),
           "2kr2r1/p1ppqpb1/bn1Ppnp1/4N3/4P3/p1N2Q1p/1PPBBPPP/2KR3R w - - 1 4",
       },
       {
-          std::string("position fen ") + KIWIPETE + " moves a2a4 b4a3 e1c1 h8g8 d5d6 e8c8 d6e7",
+          std::format("position fen {} moves a2a4 b4a3 e1c1 h8g8 d5d6 e8c8 d6e7", KIWIPETE),
           "2kr2r1/p1ppPpb1/bn2pnp1/4N3/4P3/p1N2Q1p/1PPBBPPP/2KR3R b - - 0 4",
       },
       {
-          std::string("position fen ") + KIWIPETE + " moves a2a4 b4a3 e1c1 h8g8 d5d6 e8c8 d6e7 d8f8",
+          std::format("position fen {} moves a2a4 b4a3 e1c1 h8g8 d5d6 e8c8 d6e7 d8f8", KIWIPETE),
           "2k2rr1/p1ppPpb1/bn2pnp1/4N3/4P3/p1N2Q1p/1PPBBPPP/2KR3R w - - 1 5",
       },
       {
-          std::string("position fen ") + KIWIPETE + " moves a2a4 b4a3 e1c1 h8g8 d5d6 e8c8 d6e7 d8f8 e7f8q",
+          std::format("position fen {} moves a2a4 b4a3 e1c1 h8g8 d5d6 e8c8 d6e7 d8f8 e7f8q", KIWIPETE),
           "2k2Qr1/p1pp1pb1/bn2pnp1/4N3/4P3/p1N2Q1p/1PPBBPPP/2KR3R b - - 0 5",
       },
   }));

@@ -4,6 +4,7 @@ CI:
 Tooling:
 - clang-tidy
 - coverage
+- remove -Wno-missing-field-initializers / replace with -Wno-missing-designated-field-initializers
 
 core:
 - _blsr_u64/_tzcnt_u64 for bit/square iteration
