@@ -1,13 +1,14 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base"
+    "config:recommended"
   ],
   "assignees": [
     "perryjiang"
   ],
-  "regexManagers": [
+  "customManagers": [
     {
+      "customType": "regex",
       "fileMatch": [
         "(^|/)cpm-package-lock\\.cmake$"
       ],
@@ -19,6 +20,7 @@
       "extractVersionTemplate": "^v?(?<version>.*?)$"
     },
     {
+      "customType": "regex",
       "fileMatch": [
         "(^|/)cpm-package-lock\\.cmake$"
       ],
@@ -29,6 +31,7 @@
       "datasourceTemplate": "github-tags"
     },
     {
+      "customType": "regex",
       "fileMatch": [
         "(^|/)cpm-package-lock\\.cmake$"
       ],
@@ -41,6 +44,7 @@
       "currentValueTemplate": "master"
     },
     {
+      "customType": "regex",
       "fileMatch": [
         "(^|/)\\w+\\.cmake$",
         "(^|/)CMakeLists\\.cmake$"
