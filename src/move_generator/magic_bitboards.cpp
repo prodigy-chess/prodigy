@@ -2,7 +2,7 @@ module;
 
 #include <algorithm>
 #include <bit>
-#include <magic_enum_utility.hpp>
+#include <magic_enum/magic_enum_utility.hpp>
 #include <random>
 #include <span>
 #include <type_traits>

@@ -1,6 +1,6 @@
 module;
 
-#include <magic_enum_containers.hpp>
+#include <magic_enum/magic_enum_containers.hpp>
 
 export module prodigy.core:containers;
 

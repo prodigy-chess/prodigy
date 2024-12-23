@@ -1,6 +1,6 @@
 module;
 
-#include <magic_enum_utility.hpp>
+#include <magic_enum/magic_enum_utility.hpp>
 
 export module prodigy.core:color_traits;
 

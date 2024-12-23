@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include <magic_enum_utility.hpp>
+#include <magic_enum/magic_enum_utility.hpp>
 #include <optional>
 #include <utility>
 
