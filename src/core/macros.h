@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iosfwd>
-#include <magic_enum_iostream.hpp>
+#include <magic_enum/magic_enum_iostream.hpp>
 #include <optional>
 
 #define PRODIGY_ENUM_BITWISE_OPERATORS(E)                                                                     \

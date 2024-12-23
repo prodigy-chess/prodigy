@@ -1,7 +1,7 @@
 module;
 
 #include <cstdint>
-#include <magic_enum_utility.hpp>
+#include <magic_enum/magic_enum_utility.hpp>
 #include <utility>
 
 export module prodigy.evaluation:psqt;

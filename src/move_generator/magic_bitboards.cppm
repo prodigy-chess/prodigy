@@ -3,7 +3,7 @@ module;
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <magic_enum_utility.hpp>
+#include <magic_enum/magic_enum_utility.hpp>
 #include <utility>
 
 module prodigy.move_generator:magic_bitboards;

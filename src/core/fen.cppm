@@ -2,7 +2,7 @@ module;
 
 #include <charconv>
 #include <expected>
-#include <magic_enum.hpp>
+#include <magic_enum/magic_enum.hpp>
 #include <optional>
 #include <ranges>
 #include <string_view>

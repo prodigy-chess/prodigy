@@ -3,7 +3,7 @@ module;
 #include <concepts>
 #include <expected>
 #include <iosfwd>
-#include <magic_enum.hpp>
+#include <magic_enum/magic_enum.hpp>
 #include <optional>
 #include <string_view>
 #include <tuple>

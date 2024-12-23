@@ -3,7 +3,7 @@ module;
 #include <algorithm>
 #include <cstdint>
 #include <functional>
-#include <magic_enum_utility.hpp>
+#include <magic_enum/magic_enum_utility.hpp>
 #include <type_traits>
 #include <utility>
 

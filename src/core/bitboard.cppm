@@ -4,7 +4,7 @@ module;
 #include <concepts>
 #include <cstdint>
 #include <functional>
-#include <magic_enum_utility.hpp>
+#include <magic_enum/magic_enum_utility.hpp>
 #include <utility>
 
 #include "macros.h"
