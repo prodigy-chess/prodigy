@@ -2,16 +2,16 @@ module;
 
 #include <string_view>
 
+namespace asio {
+class io_context;
+}
+
 export module prodigy.uci:engine;
 
 import prodigy.core;
 
 import :go;
 import :move;
-
-namespace asio {
-class io_context;
-}
 
 export namespace prodigy::uci {
 class Engine {

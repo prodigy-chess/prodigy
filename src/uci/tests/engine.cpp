@@ -3,6 +3,7 @@
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 #include <chrono>
+#include <format>
 #include <optional>
 #include <string>
 #include <utility>
@@ -107,14 +108,12 @@ TEST_CASE("parse") {
             },
         },
         {
-            // TODO: use std::format with Clang 17.
-            std::string("position fen ") + KIWIPETE,
+            std::format("position fen {}", KIWIPETE),
             parse_fen(KIWIPETE).value(),
             {},
         },
         {
-            // TODO: use std::format with Clang 17.
-            std::string("position fen ") + KIWIPETE + " moves d5e6 b4c3 e6f7 e8d8 f7f8q",
+            std::format("position fen {} moves d5e6 b4c3 e6f7 e8d8 f7f8q", KIWIPETE),
             parse_fen(KIWIPETE).value(),
             {
                 {

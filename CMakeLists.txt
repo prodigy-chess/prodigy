@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.27.4 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.31.3 FATAL_ERROR)
 
 project(
   prodigy
@@ -10,10 +10,6 @@ project(
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# TODO: remove when module support is no longer experimental.
-set(CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API aa1f7df0-828a-4fcd-9afc-2dc80491aca7)
-set(CMAKE_EXPERIMENTAL_CXX_MODULE_DYNDEP 1)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
