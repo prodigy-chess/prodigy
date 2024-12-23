@@ -11,10 +11,12 @@ module;
 
 export module prodigy.core:fen;
 
+import :bitboard;
 import :board;
 import :castling_rights;
 import :color;
 import :containers;
+import :direction;
 import :piece_type;
 import :ply;
 import :position;
@@ -139,7 +141,14 @@ inline constexpr auto KIWIPETE = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBB
                   return Rank::THREE;
               }
             }()) {
-          position.en_passant_target = en_passant_target;
+          position.en_passant_victim_origin = unsafe_shift(to_bitboard(*en_passant_target), [&] {
+            switch (position.side_to_move) {
+              case Color::WHITE:
+                return Direction::SOUTH;
+              case Color::BLACK:
+                return Direction::NORTH;
+            }
+          }());
           break;
         }
         return std::unexpected("Invalid en passant target square.");

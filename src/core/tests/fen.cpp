@@ -58,7 +58,7 @@ TEST_CASE("valid FEN") {
           {
               .side_to_move = Color::BLACK,
               .castling_rights = CastlingRights::WHITE_KINGSIDE | CastlingRights::BLACK_QUEENSIDE,
-              .en_passant_target = Square::E3,
+              .en_passant_victim_origin = to_bitboard(Square::E4),
               .halfmove_clock = Ply{100},
               .fullmove_number = 5000,
           },

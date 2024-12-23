@@ -70,15 +70,14 @@ class Visitor : public move_generator::Visitor<Visitor> {
     if (uci::to_move(move) != move_) {
       return;
     }
-    auto& [board, side_to_move, castling_rights, en_passant_target, halfmove_clock, fullmove_number] = position_;
+    auto& [board, side_to_move, castling_rights, en_passant_victim_origin, halfmove_clock, fullmove_number] = position_;
     board.apply<!child_context.side_to_move>(move);
     side_to_move = child_context.side_to_move;
     castling_rights = child_context.castling_rights;
     if constexpr (child_context.can_en_passant) {
-      en_passant_target = square_of(
-          unsafe_shift(move.target, !child_context.side_to_move == Color::WHITE ? Direction::SOUTH : Direction::NORTH));
+      en_passant_victim_origin = move.target;
     } else {
-      en_passant_target.reset();
+      en_passant_victim_origin = Bitboard();
     }
     if constexpr (std::same_as<std::remove_cvref_t<decltype(move)>, Capture> || piece_type == PieceType::PAWN) {
       halfmove_clock = Ply{0};
