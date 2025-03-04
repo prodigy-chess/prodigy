@@ -3,7 +3,7 @@
 #
 # SPDX-FileCopyrightText: Copyright (c) 2019-2023 Lars Melchior and contributors
 
-set(CPM_DOWNLOAD_VERSION 0.40.6)
+set(CPM_DOWNLOAD_VERSION 0.40.7)
 
 if(CPM_SOURCE_CACHE)
   set(CPM_DOWNLOAD_LOCATION "${CPM_SOURCE_CACHE}/cpm/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
