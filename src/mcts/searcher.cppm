@@ -39,7 +39,7 @@ class alignas(64) Searcher {
         path_ = {tree};
         node_ = node;
         auto reward = traverse<context>(tree.root());
-        for (auto statistics : std::views::reverse(path_)) {
+        for (auto statistics : path_ | std::views::reverse) {
           statistics.get().on_simulation_complete(reward);
           reward = -reward;
         }
