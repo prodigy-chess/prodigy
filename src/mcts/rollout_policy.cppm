@@ -16,7 +16,7 @@ export namespace prodigy::mcts {
 template <typename T>
 concept RolloutPolicy = requires(const Position position) {
   {
-    move_generator::dispatch(position, []<auto context>(const auto& node) {
+    move_generator::dispatch(position, []<auto context>(const auto & node) {
       // TODO: try std::declval with T and Edge again
       T rollout_policy;
       rollout_policy.on_search_start(node.board);
