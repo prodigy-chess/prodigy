@@ -29,7 +29,7 @@ class Arena {
   template <typename T>
   T& new_object(auto&&... args) noexcept
     requires(alignof(T) == ALIGNMENT && std::is_trivially_destructible_v<T> &&
-             noexcept(::new(std::declval<void*>()) T(std::forward<decltype(args)>(args)...)))
+             noexcept(::new (std::declval<void*>()) T(std::forward<decltype(args)>(args)...)))
   {
     assert(ptr_ - arena_.data() >= static_cast<std::ptrdiff_t>(sizeof(T)));
     return *::new (std::assume_aligned<alignof(T)>(ptr_ -= sizeof(T))) T(std::forward<decltype(args)>(args)...);
