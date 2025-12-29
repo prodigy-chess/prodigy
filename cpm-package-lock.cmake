@@ -8,7 +8,7 @@ CPMDeclarePackage(
 
 CPMDeclarePackage(
   Catch2
-  VERSION 3.8.0
+  VERSION 3.12.0
   GITHUB_REPOSITORY catchorg/Catch2
   SYSTEM YES
   EXCLUDE_FROM_ALL YES
